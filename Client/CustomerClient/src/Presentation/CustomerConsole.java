@@ -3,16 +3,22 @@ package Presentation;
 import Contracts.ICustomerService;
 import Data.BankName;
 import Services.CustomerService;
+import Transport.UDPClient;
+
+import java.io.IOException;
 
 public class CustomerConsole {
 
+    private static UDPClient _client;
     private static ICustomerService _customerService;
-    private static MyConsole _console;
+    private static Console _console;
 
     public static void main(String[] args) {
 
-        _customerService = new CustomerService();
-        _console = new MyConsole(System.in);
+        _client = new UDPClient();
+        _customerService = new CustomerService(_client);
+        _console = new Console(System.in);
+
 
         boolean isExiting = false;
 
@@ -25,7 +31,6 @@ public class CustomerConsole {
 
     private static void displayChoices() {
 
-//        String.format("Duke's Birthday: %1$tm %1$te,%1$tY", c);
         String message = String.format(
                 "Please chose an option:"
                         + "%1$s 1: Open an account"
@@ -33,13 +38,12 @@ public class CustomerConsole {
                         + "%1$s Press any other key to exit."
                 , _console.newLine());
 
-        System.out.println(message);
+        _console.println(message);
     }
 
     private static boolean executeChoice() {
 
-
-        char choice = readChar();
+        char choice = _console.readChar();
         boolean isExiting = false;
 
         switch (choice) {
@@ -47,73 +51,71 @@ public class CustomerConsole {
                 displayOpenAccount();
                 break;
             case '2':
-                System.out.println("This option has not been implemented yet. Please choose something else.");
+                _console.println("This option has not been implemented yet. Please choose something else.");
                 displayChoices();
                 break;
             default:
-                System.out.println("See you!");
+                _console.println("See you!");
                 isExiting = true;
                 break;
         }
         return isExiting;
     }
 
-    private static char readChar() {
-        String answer = _console.readLine().trim();
-
-        if (answer.equals(""))
-        {
-            return '0';
-        }
-
-        return answer.charAt(0);
-    }
-
-    private static String readString() {
-        return _console.readLine().trim();
-    }
-
-    private static int readint() {
-        String input = _console.readLine().trim();
-        int answer = 0;
-
-        if (input.equals("")) {
-            return answer;
-        }
-
-        answer = Integer.parseInt(input);
-        return answer;
-    }
-
 
     private static void displayOpenAccount() {
 
 
-        int bankId = askBankId();
+        BankName bankId = askBankId();
         String firstName = askFirstName();
         String lastName = askLastName();
         String email = askEmail();
         String phone = askPhone();
         String password = askPassword();
 
-        _customerService.openAccount(bankId, firstName, lastName, email, phone, password);
+        _console.println("Requesting server to open a new account:" + _console.newLine());
+
+        int accountNumber = openAccount(bankId, firstName, lastName, email, phone, password);
+
+        _console.println("Account Number: " + accountNumber + _console.newLine());
+
     }
 
-    private static int askBankId() {
+    private static int openAccount(
+            BankName bankId,
+            String firstName,
+            String lastName,
+            String email,
+            String phone,
+            String password) {
 
-        System.out.println("Enter bankId: ");
-        int userAnswer = readint();
-        int answer = userAnswer == 0
-                ? BankName.Royal.toInt()
-                : userAnswer;
+        int accountNumber = 0;
 
-        displayAnswer(Integer.toString(answer));
+        try {
+            accountNumber = _customerService.openAccount(bankId, firstName, lastName, email, phone, password);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally{
+            return accountNumber;
+        }
+    }
+
+    private static BankName askBankId() {
+
+        _console.println("Enter bankId" );
+        _console.println(String.format("(1 - %1$s, 2 - %2$s, 3 %3$s): ", BankName.Royal, BankName.National, BankName.Dominion));
+        int userAnswer = _console.readint();
+        BankName answer = userAnswer == 0
+                ? BankName.Royal
+                : BankName.fromInt(userAnswer);
+
+        displayAnswer(answer.toString());
         return answer;
     }
 
     private static String askFirstName() {
-        System.out.println("Enter firstName: ");
-        String userAnswer = readString();
+        _console.println("Enter firstName: ");
+        String userAnswer = _console.readString();
         String answer =  userAnswer.equals("")
                 ? "Aymeric"
                 : userAnswer;
@@ -124,8 +126,8 @@ public class CustomerConsole {
 
     private static String askLastName() {
 
-        System.out.println("Enter lastName: ");
-        String userAnswer = readString();
+        _console.println("Enter lastName: ");
+        String userAnswer = _console.readString();
         String answer = userAnswer.equals("")
                 ? "Grail"
                 : userAnswer;
@@ -135,8 +137,8 @@ public class CustomerConsole {
     }
 
     private static String askEmail() {
-        System.out.println("Enter email: ");
-        String userAnswer = readString();
+        _console.println("Enter email: ");
+        String userAnswer = _console.readString();
         String answer = userAnswer.equals("")
                 ? "Aymeric.Grail@gmail.com"
                 : userAnswer;
@@ -146,8 +148,8 @@ public class CustomerConsole {
     }
 
     private static String askPhone() {
-        System.out.println("Enter phone: ");
-        String userAnswer = readString();
+        _console.println("Enter phone: ");
+        String userAnswer = _console.readString();
         String answer = userAnswer.equals("")
                 ? "514.660.2812"
                 : userAnswer;
@@ -157,8 +159,8 @@ public class CustomerConsole {
     }
 
     private static String askPassword() {
-        System.out.println("Enter password: ");
-        String userAnswer = readString();
+        _console.println("Enter password: ");
+        String userAnswer = _console.readString();
         String answer = userAnswer.equals("")
                 ? "zaza"
                 : userAnswer;
@@ -168,6 +170,6 @@ public class CustomerConsole {
     }
 
     private static void displayAnswer(String answer) {
-        System.out.println("Value Entered: " + answer + _console.newLine());
+        _console.println("Value Entered: " + answer + _console.newLine());
     }
 }
