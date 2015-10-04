@@ -1,3 +1,5 @@
+package Data;
+
 import java.util.Date;
 
 public class Loan {
