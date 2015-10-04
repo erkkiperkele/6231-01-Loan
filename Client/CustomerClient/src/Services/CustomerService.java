@@ -22,6 +22,7 @@ public class CustomerService implements ICustomerService {
             throws IOException {
 
         //TODO: Implement:
+        // - Make it a thread!
         // - Serializer
         // - Deserializer
 

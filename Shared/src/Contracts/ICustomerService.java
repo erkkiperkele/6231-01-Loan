@@ -10,7 +10,8 @@ import java.io.IOException;
  */
 public interface ICustomerService {
 
-    int openAccount(BankName bankId, String firstName, String lastName, String emailAddress, String phoneNumber, String password) throws IOException;
+    int openAccount(BankName bankId, String firstName, String lastName, String emailAddress, String phoneNumber, String password)
+            throws IOException;
     Loan getLoan(int bankId, int accountNumber, String password, long loanAmount);
 
 }
