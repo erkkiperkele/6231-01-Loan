@@ -1,12 +1,12 @@
 package Data;
 
 import Contracts.IBankServer;
-import Contracts.ICustomerServices;
-import Contracts.IManagerServices;
+import Contracts.ICustomerService;
+import Contracts.IManagerService;
 
 import java.util.Date;
 
-public class BankServer implements IBankServer, ICustomerServices, IManagerServices{
+public class BankServer implements IBankServer, ICustomerService, IManagerService {
 
     private Customer[] customers;
 
