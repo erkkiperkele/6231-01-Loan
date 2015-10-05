@@ -4,6 +4,7 @@ import Contracts.IBankServer;
 import Contracts.ICustomerService;
 import Contracts.IManagerService;
 
+import java.io.IOException;
 import java.util.Date;
 
 public class BankServer implements IBankServer, ICustomerService, IManagerService {
@@ -27,7 +28,8 @@ public class BankServer implements IBankServer, ICustomerService, IManagerServic
     }
 
     @Override
-    public int openAccount(int bankId, String FirstName, String LastName, String EmailAddress, String PhoneNumber, String Password) {
+    public int openAccount(BankName bankId, String firstName, String lastName, String emailAddress, String phoneNumber, String password)
+            throws IOException {
         return 0;
     }
 
