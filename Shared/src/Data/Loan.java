@@ -1,8 +1,9 @@
 package Data;
 
+import java.io.Serializable;
 import java.util.Date;
 
-public class Loan {
+public class Loan implements Serializable {
 
     private int id;
     private int customerAccountNumber;

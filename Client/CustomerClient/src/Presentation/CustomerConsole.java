@@ -2,8 +2,8 @@ package Presentation;
 
 import Contracts.ICustomerService;
 import Data.BankName;
-import Services.CustomerService;
-import Transport.UDPClient;
+import Transport.RMI.CustomerRMIClient;
+import Transport.UDP.UDPClient;
 
 import java.io.IOException;
 
@@ -16,7 +16,7 @@ public class CustomerConsole {
     public static void main(String[] args) {
 
         _client = new UDPClient();
-        _customerService = new CustomerService(_client);
+        _customerService = new CustomerRMIClient();
         _console = new Console(System.in);
 
 

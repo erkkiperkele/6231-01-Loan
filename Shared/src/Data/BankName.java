@@ -40,22 +40,4 @@ public enum BankName {
         }
     }
 
-    public int getPort(){
-        switch(this)
-        {
-            case Royal:
-                return 666;
-
-            case National:
-                return 667;
-
-            case Dominion:
-                return 668;
-
-            default:
-                return 0;
-        }
-
-    }
-
 }
