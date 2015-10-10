@@ -1,6 +1,7 @@
 package Transport.RMI;
 
 import Contracts.ICustomerServer;
+import Contracts.IFileLogger;
 import Contracts.IManagerServer;
 import Data.Bank;
 import Data.Customer;
@@ -18,6 +19,7 @@ import java.util.Date;
 public class BankRMIServer implements ICustomerServer, IManagerServer {
 
     private static int _serverPort;
+    private IFileLogger _fileLogger;
 
 
     public static void main(String[] args) {
@@ -59,7 +61,7 @@ public class BankRMIServer implements ICustomerServer, IManagerServer {
     public Customer getCustomer(Bank bank, String email, String password) throws RemoteException {
 
         //TODO: Real Implementation!
-        return new Customer("TestFirstName", "TestLastName", Bank.Royal);
+        return new Customer(42, "TestFirstName", "TestLastName", Bank.Royal);
     }
 
     @Override
