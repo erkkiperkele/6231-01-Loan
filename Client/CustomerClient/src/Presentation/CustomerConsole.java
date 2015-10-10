@@ -1,19 +1,16 @@
 package Presentation;
 
-import Contracts.ICustomerServer;
 import Contracts.ICustomerService;
-import Data.BankName;
+import Data.*;
 import Services.CustomerService;
-import Transport.RMI.CustomerRMIClient;
 import Transport.UDP.UDPClient;
-
-import java.io.IOException;
 
 public class CustomerConsole {
 
     private static UDPClient _client;
     private static ICustomerService _customerService;
     private static Console _console;
+    private static Customer _currentCustomer;
 
     public static void main(String[] args) {
 
@@ -36,7 +33,7 @@ public class CustomerConsole {
         String message = String.format(
                 "Please chose an option:"
                         + "%1$s 1: Open an account"
-                        + "%1$s 2: To come"
+                        + "%1$s 2: Sign in"
                         + "%1$s Press any other key to exit."
                 , _console.newLine());
 
@@ -54,7 +51,7 @@ public class CustomerConsole {
                 break;
             case '2':
                 _console.println("This option has not been implemented yet. Please choose something else.");
-                displayChoices();
+                displaySignin();
                 break;
             default:
                 _console.println("See you!");
@@ -64,11 +61,32 @@ public class CustomerConsole {
         return isExiting;
     }
 
+    private static void displaySignin() {
+        Bank bank = askBankId();
+        String email = askEmail();
+        String password = askPassword();
+
+        Customer customer = _customerService.getCustomer(bank, email, password);
+
+        _currentCustomer = customer;
+        displayCurrentCustomerInfo();
+
+        displayChoices();
+    }
+
+    private static void displayCurrentCustomerInfo() {
+
+        _console.println("Customer logged in as: " + _console.newLine());
+        _console.println(_currentCustomer.getFirstName() + _console.newLine());
+        _console.println(_currentCustomer.getLastName() + _console.newLine());
+        _console.println(_currentCustomer.getBank().toString() + _console.newLine());
+    }
+
 
     private static void displayOpenAccount() {
 
 
-        BankName bankId = askBankId();
+        Bank bankId = askBankId();
         String firstName = askFirstName();
         String lastName = askLastName();
         String email = askEmail();
@@ -83,14 +101,14 @@ public class CustomerConsole {
 
     }
 
-    private static BankName askBankId() {
+    private static Bank askBankId() {
 
         _console.println("Enter bankId" );
-        _console.println(String.format("(1 - %1$s, 2 - %2$s, 3 %3$s): ", BankName.Royal, BankName.National, BankName.Dominion));
+        _console.println(String.format("(1 - %1$s, 2 - %2$s, 3 %3$s): ", Bank.Royal, Bank.National, Bank.Dominion));
         int userAnswer = _console.readint();
-        BankName answer = userAnswer == 0
-                ? BankName.Royal
-                : BankName.fromInt(userAnswer);
+        Bank answer = userAnswer == 0
+                ? Bank.Royal
+                : Bank.fromInt(userAnswer);
 
         displayAnswer(answer.toString());
         return answer;
@@ -153,7 +171,7 @@ public class CustomerConsole {
     }
 
     private static int openAccount(
-            BankName bankId,
+            Bank bankId,
             String firstName,
             String lastName,
             String email,

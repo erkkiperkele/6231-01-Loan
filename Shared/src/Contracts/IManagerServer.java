@@ -8,8 +8,7 @@ import java.util.Date;
 
 
 /**
- * Defines the contract for the manager services.
- * Must be implemented by both the manager client and the bank server.
+ * Defines the manager's server contract (excludes any manager operation).
  */
 public interface IManagerServer extends Remote {
 

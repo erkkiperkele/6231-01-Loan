@@ -10,7 +10,9 @@ import java.rmi.RemoteException;
  */
 public interface ICustomerServer extends Remote {
 
-    int openAccount(BankName bankId, String firstName, String lastName, String emailAddress, String phoneNumber, String password)
+    int openAccount(Bank bank, String firstName, String lastName, String emailAddress, String phoneNumber, String password)
+            throws RemoteException;
+    Customer getCustomer(Bank bank, String email, String password)
             throws RemoteException;
     Loan getLoan(int bankId, int accountNumber, String password, long loanAmount)
             throws RemoteException;

@@ -2,7 +2,8 @@ package Transport.RMI;
 
 import Contracts.ICustomerServer;
 import Contracts.IManagerServer;
-import Data.BankName;
+import Data.Bank;
+import Data.Customer;
 import Data.CustomerInfo;
 import Data.Loan;
 import Transport.ServerPorts;
@@ -21,7 +22,7 @@ public class BankRMIServer implements ICustomerServer, IManagerServer {
 
     public static void main(String[] args) {
 
-        BankName serverName = BankName.fromInt(Integer.parseInt(args[0]));
+        Bank serverName = Bank.fromInt(Integer.parseInt(args[0]));
         int serverPort = ServerPorts.fromBankName(serverName);
 
         try {
@@ -46,12 +47,19 @@ public class BankRMIServer implements ICustomerServer, IManagerServer {
 
 
     @Override
-    public int openAccount(BankName bankId, String firstName, String lastName, String emailAddress, String phoneNumber, String password)
+    public int openAccount(Bank bankId, String firstName, String lastName, String emailAddress, String phoneNumber, String password)
             throws RemoteException {
 
         //TODO: Real Implementation! (Create an actual account in the "database").
 
         return 433333;     //Temp value to be able to implement client.
+    }
+
+    @Override
+    public Customer getCustomer(Bank bank, String email, String password) throws RemoteException {
+
+        //TODO: Real Implementation!
+        return new Customer("TestFirstName", "TestLastName", Bank.Royal);
     }
 
     @Override

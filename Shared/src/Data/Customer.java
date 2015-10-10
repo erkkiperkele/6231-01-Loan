@@ -1,15 +1,36 @@
 package Data;
 
-public class Customer {
+import java.io.Serializable;
+
+public class Customer implements Serializable{
 
     private String firstName;
     private String lastName;
-    private String email;
-    private String phoneNumber;
-    private String password;
+    private Bank bank;
 
-    private int accountNumber;
-    private long creditLimit;
+    //accountNumber
+    //creditLimit
+    //email
+    //password
 
-    private Loan[] loans;
+
+    public String getFirstName() {
+
+        return firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public Bank getBank() {
+        return bank;
+    }
+
+    public Customer(String firstName, String lastName, Bank bank)
+    {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.bank = bank;
+    }
 }

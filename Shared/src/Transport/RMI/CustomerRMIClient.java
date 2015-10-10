@@ -1,12 +1,11 @@
 package Transport.RMI;
 
 import Contracts.ICustomerServer;
-import Data.BankName;
+import Data.Bank;
+import Data.Customer;
 import Data.Loan;
 import Transport.ServerPorts;
-import com.sun.corba.se.spi.activation.Server;
 
-import java.io.File;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
@@ -18,11 +17,11 @@ public class CustomerRMIClient implements ICustomerServer {
     private final String policyPath = "./LoanManagerSecurity.policy";
     private ICustomerServer _server;
 
-    public CustomerRMIClient(BankName bankName)
+    public CustomerRMIClient(Bank bank)
     {
         System.setProperty("java.security.policy",policyPath);
 
-        int serverPort = ServerPorts.fromBankName(bankName);
+        int serverPort = ServerPorts.fromBankName(bank);
         _server = new BankRMIServer(serverPort);
 
         try {
@@ -38,10 +37,15 @@ public class CustomerRMIClient implements ICustomerServer {
     }
 
     @Override
-    public int openAccount(BankName bankId, String firstName, String lastName, String emailAddress, String phoneNumber, String password)
+    public int openAccount(Bank bankId, String firstName, String lastName, String emailAddress, String phoneNumber, String password)
             throws RemoteException {
         int accountNumber = _server.openAccount(bankId, firstName, lastName, emailAddress, phoneNumber, password);
         return accountNumber;
+    }
+
+    @Override
+    public Customer getCustomer(Bank bank, String email, String password) throws RemoteException {
+        return _server.getCustomer(bank, email, password);
     }
 
     @Override

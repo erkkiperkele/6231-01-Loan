@@ -1,12 +1,12 @@
 package Data;
 
-public enum BankName {
+public enum Bank {
     Royal,
     National,
     Dominion,
     Invalid;
 
-    public static BankName fromInt(int bankId){
+    public static Bank fromInt(int bankId){
         switch(bankId)
         {
             case 1:

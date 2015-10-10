@@ -1,6 +1,6 @@
 package Transport;
 
-import Data.BankName;
+import Data.Bank;
 
 public enum ServerPorts {
 
@@ -27,9 +27,9 @@ public enum ServerPorts {
 
 
 
-    public static int fromBankName(BankName bankName)
+    public static int fromBankName(Bank bank)
     {
-        switch(bankName)
+        switch(bank)
         {
             case Royal:
                 return 4242;

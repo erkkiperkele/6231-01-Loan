@@ -2,7 +2,8 @@ package Services;
 
 
 import Contracts.ICustomerService;
-import Data.BankName;
+import Data.Bank;
+import Data.Customer;
 import Data.Loan;
 import Transport.RMI.CustomerRMIClient;
 
@@ -19,23 +20,34 @@ public class CustomerService implements ICustomerService {
 
     private void initializeClients() {
         _clients = new CustomerRMIClient[3];
-        _clients[BankName.Royal.toInt()-1] = new CustomerRMIClient(BankName.Royal);
-        _clients[BankName.National.toInt()-1] = new CustomerRMIClient(BankName.National);
-        _clients[BankName.Dominion.toInt()-1] = new CustomerRMIClient(BankName.Dominion);
+        _clients[Bank.Royal.toInt()-1] = new CustomerRMIClient(Bank.Royal);
+        _clients[Bank.National.toInt()-1] = new CustomerRMIClient(Bank.National);
+        _clients[Bank.Dominion.toInt()-1] = new CustomerRMIClient(Bank.Dominion);
     }
 
     @Override
-    public int openAccount(BankName bankName, String firstName, String lastName, String emailAddress, String phoneNumber, String password) {
+    public int openAccount(Bank bank, String firstName, String lastName, String emailAddress, String phoneNumber, String password) {
 
         try {
-            int accountNumber = _clients[bankName.toInt()-1].openAccount(bankName, firstName, lastName, emailAddress, phoneNumber, password);
+            int accountNumber = _clients[bank.toInt()-1].openAccount(bank, firstName, lastName, emailAddress, phoneNumber, password);
             return accountNumber;
         } catch (RemoteException e) {
             //TODO: Better exception handling!
             e.printStackTrace();
+            return 0;
         }
+    }
 
-        return 0;
+    @Override
+    public Customer getCustomer(Bank bank, String email, String password) {
+
+        try {
+            return _clients[bank.toInt()-1].getCustomer(bank, email, password);
+        } catch (RemoteException e) {
+            //TODO: Better exception handling!
+            e.printStackTrace();
+            return null;
+        }
     }
 
     @Override
