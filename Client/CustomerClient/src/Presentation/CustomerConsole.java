@@ -1,7 +1,9 @@
 package Presentation;
 
+import Contracts.ICustomerServer;
 import Contracts.ICustomerService;
 import Data.BankName;
+import Services.CustomerService;
 import Transport.RMI.CustomerRMIClient;
 import Transport.UDP.UDPClient;
 
@@ -16,7 +18,7 @@ public class CustomerConsole {
     public static void main(String[] args) {
 
         _client = new UDPClient();
-        _customerService = new CustomerRMIClient();
+        _customerService = new CustomerService();
         _console = new Console(System.in);
 
 
@@ -79,25 +81,6 @@ public class CustomerConsole {
 
         _console.println("Account Number: " + accountNumber + _console.newLine());
 
-    }
-
-    private static int openAccount(
-            BankName bankId,
-            String firstName,
-            String lastName,
-            String email,
-            String phone,
-            String password) {
-
-        int accountNumber = 0;
-
-        try {
-            accountNumber = _customerService.openAccount(bankId, firstName, lastName, email, phone, password);
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally{
-            return accountNumber;
-        }
     }
 
     private static BankName askBankId() {
@@ -167,6 +150,18 @@ public class CustomerConsole {
 
         displayAnswer(answer);
         return answer;
+    }
+
+    private static int openAccount(
+            BankName bankId,
+            String firstName,
+            String lastName,
+            String email,
+            String phone,
+            String password) {
+
+        int accountNumber = _customerService.openAccount(bankId, firstName, lastName, email, phone, password);
+        return accountNumber;
     }
 
     private static void displayAnswer(String answer) {

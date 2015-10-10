@@ -1,36 +1,33 @@
 package Transport.RMI;
 
-import Contracts.ICustomerService;
+import Contracts.ICustomerServer;
 import Data.BankName;
 import Data.Loan;
 import Transport.ServerPorts;
+import com.sun.corba.se.spi.activation.Server;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 
 
-public class CustomerRMIClient implements ICustomerService {
+public class CustomerRMIClient implements ICustomerServer {
 
     private final String policyPath = "./LoanManagerSecurity.policy";
-    private ICustomerService _server;
+    private ICustomerServer _server;
 
-    public CustomerRMIClient()
+    public CustomerRMIClient(BankName bankName)
     {
-        File test = new File(policyPath);
-        boolean exists = test.exists();
-
         System.setProperty("java.security.policy",policyPath);
 
-        _server = new CustomerRMIServer();
+        int serverPort = ServerPorts.fromBankName(bankName);
+        _server = new BankRMIServer(serverPort);
 
         try {
-//            String serverUrl = "rmi://localhost:4242/customer";
             String serverUrl = String.format("rmi://localhost:%d/customer", ServerPorts.CustomerRMI.getPort()); // => "001"
-            _server = (ICustomerService) Naming.lookup(serverUrl);
+            _server = (ICustomerServer) Naming.lookup(serverUrl);
         } catch (MalformedURLException e) {
             e.printStackTrace();
         } catch (RemoteException e) {
