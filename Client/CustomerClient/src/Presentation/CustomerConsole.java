@@ -4,6 +4,7 @@ import Contracts.ICustomerService;
 import Data.*;
 import Services.CustomerService;
 import Transport.UDP.UDPClient;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 public class CustomerConsole {
 
@@ -13,6 +14,11 @@ public class CustomerConsole {
     private static Customer _currentCustomer;
 
     public static void main(String[] args) {
+
+        //TODO: Don't forget about logging!
+
+        //QUESTIONS:
+        //- Does the client have to execute asynchronous requests?
 
         _client = new UDPClient();
         _customerService = new CustomerService();
@@ -33,7 +39,8 @@ public class CustomerConsole {
         String message = String.format(
                 "Please chose an option:"
                         + "%1$s 1: Open an account"
-                        + "%1$s 2: Sign in"
+                        + "%1$s 2: Open multiple accounts concurrently"
+                        + "%1$s 3: Sign in"
                         + "%1$s Press any other key to exit."
                 , _console.newLine());
 
@@ -50,7 +57,9 @@ public class CustomerConsole {
                 displayOpenAccount();
                 break;
             case '2':
-                _console.println("This option has not been implemented yet. Please choose something else.");
+                displayOpenMultipleAccounts();
+                break;
+            case '3':
                 displaySignin();
                 break;
             default:
@@ -59,6 +68,13 @@ public class CustomerConsole {
                 break;
         }
         return isExiting;
+    }
+
+    private static int displayOpenMultipleAccounts() {
+
+
+        //TODO: Implement Concurrent account Creation.
+        throw new NotImplementedException();
     }
 
     private static void displaySignin() {

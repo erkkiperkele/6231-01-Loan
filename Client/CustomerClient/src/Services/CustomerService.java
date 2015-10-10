@@ -26,10 +26,17 @@ public class CustomerService implements ICustomerService {
     }
 
     @Override
-    public int openAccount(Bank bank, String firstName, String lastName, String emailAddress, String phoneNumber, String password) {
+    public int openAccount(
+            Bank bank,
+            String firstName,
+            String lastName,
+            String emailAddress,
+            String phoneNumber,
+            String password) {
 
         try {
-            int accountNumber = _clients[bank.toInt()-1].openAccount(bank, firstName, lastName, emailAddress, phoneNumber, password);
+            CustomerRMIClient client = _clients[bank.toInt()-1];
+            int accountNumber = client.openAccount(bank, firstName, lastName, emailAddress, phoneNumber, password);
             return accountNumber;
         } catch (RemoteException e) {
             //TODO: Better exception handling!
@@ -54,4 +61,27 @@ public class CustomerService implements ICustomerService {
     public Loan getLoan(int bankId, int AccountNumber, String Password, long LoanAmount) {
         return null;
     }
+
+
+    //TEST
+//
+//
+//    @Override
+//    public int openAccount(Bank bank, String firstName, String lastName, String emailAddress, String phoneNumber, String password){
+//
+//        Thread thread = new Thread(new OpenAccountThread(
+//                _clients[bank.toInt()-1],
+//                bank,
+//                firstName,
+//                lastName,
+//                emailAddress,
+//                phoneNumber,
+//                password
+//                ));
+//
+//        thread.start();
+//
+//
+//        return accountNumber;
+//    }
 }
