@@ -2,7 +2,7 @@ package Data;
 
 import java.io.Serializable;
 
-public class Customer implements Serializable{
+public class Customer implements Serializable {
 
     private int id;
 
@@ -15,8 +15,6 @@ public class Customer implements Serializable{
     //email
     //password
 
-
-
     public int getId() {
         return id;
     }
@@ -27,15 +25,16 @@ public class Customer implements Serializable{
     }
 
     public String getLastName() {
+
         return lastName;
     }
 
     public Bank getBank() {
+
         return bank;
     }
 
-    public Customer(int id, String firstName, String lastName, Bank bank)
-    {
+    public Customer(int id, String firstName, String lastName, Bank bank) {
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;

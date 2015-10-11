@@ -4,7 +4,7 @@ import Contracts.ICustomerServer;
 import Data.Bank;
 import Data.Customer;
 import Data.Loan;
-import Transport.ServerPorts;
+import Data.ServerPorts;
 
 import java.net.MalformedURLException;
 import java.rmi.Naming;

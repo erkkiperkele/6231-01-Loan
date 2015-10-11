@@ -4,7 +4,7 @@ public enum Bank {
     Royal,
     National,
     Dominion,
-    Invalid;
+    None;
 
     public static Bank fromInt(int bankId){
         switch(bankId)
@@ -19,7 +19,7 @@ public enum Bank {
                 return Dominion;
 
             default:
-                return Invalid;
+                return None;
         }
     }
 

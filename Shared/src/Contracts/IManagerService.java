@@ -8,7 +8,7 @@ import java.util.Date;
 
 
 /**
- * Defines the contract for the manager services.
+ * Defines the contract for the client's manager services.
  */
 public interface IManagerService {
 

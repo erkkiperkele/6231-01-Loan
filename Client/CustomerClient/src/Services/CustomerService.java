@@ -13,16 +13,15 @@ public class CustomerService implements ICustomerService {
 
     private CustomerRMIClient[] _clients;
 
-    public CustomerService()
-    {
+    public CustomerService() {
         initializeClients();
     }
 
     private void initializeClients() {
         _clients = new CustomerRMIClient[3];
-        _clients[Bank.Royal.toInt()-1] = new CustomerRMIClient(Bank.Royal);
-        _clients[Bank.National.toInt()-1] = new CustomerRMIClient(Bank.National);
-        _clients[Bank.Dominion.toInt()-1] = new CustomerRMIClient(Bank.Dominion);
+        _clients[Bank.Royal.toInt() - 1] = new CustomerRMIClient(Bank.Royal);
+        _clients[Bank.National.toInt() - 1] = new CustomerRMIClient(Bank.National);
+        _clients[Bank.Dominion.toInt() - 1] = new CustomerRMIClient(Bank.Dominion);
     }
 
     @Override
@@ -35,7 +34,7 @@ public class CustomerService implements ICustomerService {
             String password) {
 
         try {
-            CustomerRMIClient client = _clients[bank.toInt()-1];
+            CustomerRMIClient client = _clients[bank.toInt() - 1];
             int accountNumber = client.openAccount(bank, firstName, lastName, emailAddress, phoneNumber, password);
             return accountNumber;
         } catch (RemoteException e) {
@@ -49,7 +48,7 @@ public class CustomerService implements ICustomerService {
     public Customer getCustomer(Bank bank, String email, String password) {
 
         try {
-            return _clients[bank.toInt()-1].getCustomer(bank, email, password);
+            return _clients[bank.toInt() - 1].getCustomer(bank, email, password);
         } catch (RemoteException e) {
             //TODO: Better exception handling!
             e.printStackTrace();
@@ -62,26 +61,4 @@ public class CustomerService implements ICustomerService {
         return null;
     }
 
-
-    //TEST
-//
-//
-//    @Override
-//    public int openAccount(Bank bank, String firstName, String lastName, String emailAddress, String phoneNumber, String password){
-//
-//        Thread thread = new Thread(new OpenAccountThread(
-//                _clients[bank.toInt()-1],
-//                bank,
-//                firstName,
-//                lastName,
-//                emailAddress,
-//                phoneNumber,
-//                password
-//                ));
-//
-//        thread.start();
-//
-//
-//        return accountNumber;
-//    }
 }

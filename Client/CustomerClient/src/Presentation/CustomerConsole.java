@@ -1,20 +1,16 @@
 package Presentation;
 
 import Contracts.ICustomerService;
-import Contracts.IFileLogger;
-import Data.*;
-import IO.FileLogger;
+import Data.Bank;
+import Data.Customer;
 import Services.CustomerService;
-import Transport.UDP.UDPClient;
+import Services.SessionService;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 public class CustomerConsole {
 
-    private static UDPClient _client;
     private static ICustomerService _customerService;
     private static Console _console;
-    private static Customer _currentCustomer;
-    private static IFileLogger _fileLogger;
 
     public static void main(String[] args) {
 
@@ -23,11 +19,8 @@ public class CustomerConsole {
         //QUESTIONS:
         //- Does the client have to execute asynchronous requests?
 
-        _client = new UDPClient();
         _customerService = new CustomerService();
         _console = new Console(System.in);
-        _fileLogger = new FileLogger();
-
 
         boolean isExiting = false;
 
@@ -88,25 +81,25 @@ public class CustomerConsole {
 
         Customer customer = _customerService.getCustomer(bank, email, password);
 
-        _currentCustomer = customer;
-        _fileLogger.setCurrentCustomer(_currentCustomer);
-        _fileLogger.info("User logged in");
-        displayCurrentCustomerInfo();
+        SessionService.getInstance().signIn(customer);
+        SessionService.getInstance().log().info("User logged in");
 
+        displayCurrentCustomerInfo();
         displayChoices();
     }
 
     private static void displayCurrentCustomerInfo() {
 
+        Customer currentCustomer = SessionService.getInstance().getCurrentCustomer();
+
         _console.println("Customer logged in as: " + _console.newLine());
-        _console.println(_currentCustomer.getFirstName() + _console.newLine());
-        _console.println(_currentCustomer.getLastName() + _console.newLine());
-        _console.println(_currentCustomer.getBank().toString() + _console.newLine());
+        _console.println(currentCustomer.getFirstName() + _console.newLine());
+        _console.println(currentCustomer.getLastName() + _console.newLine());
+        _console.println(currentCustomer.getBank().toString() + _console.newLine());
     }
 
 
     private static void displayOpenAccount() {
-
 
         Bank bankId = askBankId();
         String firstName = askFirstName();
@@ -115,21 +108,20 @@ public class CustomerConsole {
         String phone = askPhone();
         String password = askPassword();
 
-        _console.println("Requesting server to open a new account:" + _console.newLine());
+        SessionService.getInstance().log().info("Requesting server to open a new account:");
 
         int accountNumber = openAccount(bankId, firstName, lastName, email, phone, password);
 
-        _currentCustomer = new Customer(0, firstName, lastName, bankId);
-        _fileLogger.setCurrentCustomer(_currentCustomer);
-        _fileLogger.info(String.format("Account #%d created.", accountNumber));
+        //TODO: Create ServerSide (getCustomer(accountNumber)
+        Customer newCustomer = new Customer(42, firstName, lastName, bankId);
 
-        _console.println("Account Number: " + accountNumber + _console.newLine());
-
+        SessionService.getInstance().signIn(newCustomer);
+        SessionService.getInstance().log().info(String.format("Account #%d created.", accountNumber));
     }
 
     private static Bank askBankId() {
 
-        _console.println("Enter bankId" );
+        _console.println("Enter bankId");
         _console.println(String.format("(1 - %1$s, 2 - %2$s, 3 %3$s): ", Bank.Royal, Bank.National, Bank.Dominion));
         int userAnswer = _console.readint();
         Bank answer = userAnswer == 0
@@ -141,9 +133,10 @@ public class CustomerConsole {
     }
 
     private static String askFirstName() {
+
         _console.println("Enter firstName: ");
         String userAnswer = _console.readString();
-        String answer =  userAnswer.equals("")
+        String answer = userAnswer.equals("")
                 ? "Aymeric"
                 : userAnswer;
 

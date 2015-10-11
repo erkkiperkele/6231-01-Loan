@@ -8,21 +8,18 @@ public class Console {
 
     private static Scanner _console;
 
-    public Console(InputStream in)
-    {
+    public Console(InputStream in) {
         _console = new Scanner(in);
     }
 
-    public String newLine()
-    {
+    public String newLine() {
         return System.lineSeparator();
     }
 
     public char readChar() {
         String answer = this.readLine().trim();
 
-        if (answer.equals(""))
-        {
+        if (answer.equals("")) {
             return '0';
         }
 
@@ -45,13 +42,11 @@ public class Console {
         return answer;
     }
 
-    public void println(String message)
-    {
+    public void println(String message) {
         System.out.println(message);
     }
 
-    private String readLine()
-    {
+    private String readLine() {
         return _console.nextLine();
     }
 }

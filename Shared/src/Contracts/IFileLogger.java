@@ -1,11 +1,12 @@
 package Contracts;
 
-import Data.Customer;
+import java.io.Closeable;
 
-public interface IFileLogger {
+/**
+ * A simple File logger interface.
+ */
+public interface IFileLogger extends Closeable {
     void info(String message);
     void warning(String message);
     void error(String message);
-
-    void setCurrentCustomer(Customer currentCustomer);
 }

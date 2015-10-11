@@ -1,13 +1,12 @@
 package Transport.RMI;
 
 import Contracts.ICustomerServer;
-import Contracts.IFileLogger;
 import Contracts.IManagerServer;
 import Data.Bank;
 import Data.Customer;
 import Data.CustomerInfo;
 import Data.Loan;
-import Transport.ServerPorts;
+import Data.ServerPorts;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
@@ -19,10 +18,10 @@ import java.util.Date;
 public class BankRMIServer implements ICustomerServer, IManagerServer {
 
     private static int _serverPort;
-    private IFileLogger _fileLogger;
-
 
     public static void main(String[] args) {
+
+        //TODO: Logging!
 
         Bank serverName = Bank.fromInt(Integer.parseInt(args[0]));
         int serverPort = ServerPorts.fromBankName(serverName);
