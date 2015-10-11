@@ -1,9 +1,6 @@
 package Data;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 /**
  * The accounts and loans are placed in several lists
@@ -18,8 +15,8 @@ import java.util.List;
 public class DataRepository {
 
 
-    private HashMap<String, List<Account>> accounts;
-    private HashMap<String, List<Loan>> loans;
+    private Hashtable<String, List<Account>> accounts;
+    private Hashtable<String, List<Loan>> loans;
 
     //Cheap trick to leave the first 100 values for data population intents
     private int accountNumber = 100;
@@ -28,8 +25,8 @@ public class DataRepository {
 
     public DataRepository() {
 
-        this.accounts = new HashMap<>();
-        this.loans = new HashMap<>();
+        this.accounts = new Hashtable<>();
+        this.loans = new Hashtable<>();
 
         //TODO: populate!
     }
@@ -44,16 +41,6 @@ public class DataRepository {
                 .filter(a -> a.getOwner().getUserName() == owner.getUserName())
                 .findFirst()
                 .orElse(null);
-
-//        List<Account> accounts = this.accounts.get(index);
-//        for (Account account : accounts)
-//        {
-//            if(account.getOwner().getUserName() == owner.getUserName())
-//            {
-//                return account;
-//            }
-//        }
-//        return null;
     }
 
     public void createAccount(Customer owner)
@@ -103,25 +90,6 @@ public class DataRepository {
                 .findFirst()
                 .orElse(null)      //TODO: dangerous, if loan doesn't exist, you end up with a null ref.
                 .setDueDate(newDueDate);
-
-//        List<Loan> loans = this.loans.get(index);
-//
-//        loans
-//                .stream()
-//                .filter(l -> l.getLoanNumber() == loanNumber)
-//                .findFirst()
-//                .orElse(null)
-//                .setDueDate(newDueDate);
-//
-//        loan.setDueDate(newDueDate);
-//
-//        this.loans.get(index).add
-
-//        loans.stream().filter(
-//                loan -> loan.getCustomerAccountNumber() == customer.getAccountNumber())
-//                .forEach(loan -> {
-//            customerLoans.add(loan);
-//        });
     }
 
     private String getIndex(Customer customer)
