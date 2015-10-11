@@ -1,7 +1,9 @@
 package Presentation;
 
 import Contracts.ICustomerService;
+import Contracts.IFileLogger;
 import Data.*;
+import IO.FileLogger;
 import Services.CustomerService;
 import Transport.UDP.UDPClient;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
@@ -12,6 +14,7 @@ public class CustomerConsole {
     private static ICustomerService _customerService;
     private static Console _console;
     private static Customer _currentCustomer;
+    private static IFileLogger _fileLogger;
 
     public static void main(String[] args) {
 
@@ -23,6 +26,7 @@ public class CustomerConsole {
         _client = new UDPClient();
         _customerService = new CustomerService();
         _console = new Console(System.in);
+        _fileLogger = new FileLogger();
 
 
         boolean isExiting = false;
@@ -85,6 +89,8 @@ public class CustomerConsole {
         Customer customer = _customerService.getCustomer(bank, email, password);
 
         _currentCustomer = customer;
+        _fileLogger.setCurrentCustomer(_currentCustomer);
+        _fileLogger.info("User logged in");
         displayCurrentCustomerInfo();
 
         displayChoices();
@@ -112,6 +118,10 @@ public class CustomerConsole {
         _console.println("Requesting server to open a new account:" + _console.newLine());
 
         int accountNumber = openAccount(bankId, firstName, lastName, email, phone, password);
+
+        _currentCustomer = new Customer(0, firstName, lastName, bankId);
+        _fileLogger.setCurrentCustomer(_currentCustomer);
+        _fileLogger.info(String.format("Account #%d created.", accountNumber));
 
         _console.println("Account Number: " + accountNumber + _console.newLine());
 

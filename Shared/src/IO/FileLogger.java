@@ -1,25 +1,24 @@
 package IO;
 
 import Contracts.IFileLogger;
-import Data.Customer;
-
+import Data.*;
 import java.io.*;
-import java.util.Date;
-import java.util.Dictionary;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.logging.Logger;
+import java.util.*;
 
 public class FileLogger implements IFileLogger, Closeable {
 
     private Customer _currentCustomer;
-    private Dictionary<Integer, PrintWriter> _loggers;
+    private Map<Integer, FileOutputStream> _loggers;
     private String _rootPath = "./Logs/";
-
 
 
     public void setCurrentCustomer(Customer _currentCustomer) {
         this._currentCustomer = _currentCustomer;
+    }
+
+    public FileLogger() {
+        _currentCustomer = new Customer(0, "default", "logger", Bank.Invalid);
+        _loggers = new HashMap<Integer, FileOutputStream>();
     }
 
     public FileLogger(Customer currentCustomer) {
@@ -28,10 +27,8 @@ public class FileLogger implements IFileLogger, Closeable {
 
     @Override
     public void close() throws IOException {
-        Enumeration<PrintWriter> loggers = _loggers.elements();
-        while( loggers.hasMoreElements())
-        {
-            loggers.nextElement().close();
+        for (FileOutputStream logger : _loggers.values()) {
+            logger.close();
         }
     }
 
@@ -50,31 +47,51 @@ public class FileLogger implements IFileLogger, Closeable {
         log(" ERROR: " + message);
     }
 
-    private void log(String message)
-    {
-        PrintWriter logger = getLazyLogger(_currentCustomer);
-        logger.println(new Date() + message + "/n");
+    private void log(String message) {
 
+        FileOutputStream logger = getLazyLogger(_currentCustomer);
+        String outputMessage = new Date() + message + "\n";
+
+        try {
+            logger.write(outputMessage.getBytes());
+            System.out.println(outputMessage);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    private PrintWriter getLazyLogger(Customer currentCustomer) {
+    private FileOutputStream getLazyLogger(Customer currentCustomer) {
 
-        PrintWriter logger = _loggers.get(currentCustomer.getId());
+        FileOutputStream logger = _loggers.get(currentCustomer.getId());
 
         if (logger == null) {
-            String path = _rootPath + currentCustomer.getFirstName() + "_" + currentCustomer.getLastName() + ".txt";
-
-
+            String path =
+                    _rootPath
+                            + currentCustomer.getFirstName()
+                            + "_"
+                            + currentCustomer.getLastName()
+                            + "_"
+                            + currentCustomer.getBank()
+                            + ".txt";
             try {
-                logger = new PrintWriter(path, "UTF-8");
+                File f = new File(path);
+                f.getParentFile().mkdirs();
+                f.createNewFile();
+
+                FileOutputStream myLogger = new FileOutputStream(path);
+
+                _loggers.put(currentCustomer.getId(), myLogger);
+
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            _loggers.put(currentCustomer.getId(), logger);
+
         }
 
-        return logger;
+        return _loggers.get(currentCustomer.getId());
     }
 }
