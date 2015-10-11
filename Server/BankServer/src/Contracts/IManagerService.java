@@ -1,0 +1,15 @@
+package Contracts;
+
+import Data.CustomerInfo;
+
+import java.util.Date;
+
+
+/**
+ * Defines the contract for the client's manager services.
+ */
+public interface IManagerService {
+
+    void delayPayment(int bankId, int loanID, Date currentDueDate, Date newDueDate);
+    CustomerInfo[] getCustomersInfo(int bankId);
+}

@@ -5,6 +5,7 @@ import Data.Bank;
 import Data.Customer;
 import Data.Loan;
 import Data.ServerPorts;
+import Server.BankRMIServer;
 
 import java.net.MalformedURLException;
 import java.rmi.Naming;
@@ -22,10 +23,10 @@ public class CustomerRMIClient implements ICustomerServer {
         System.setProperty("java.security.policy",policyPath);
 
         int serverPort = ServerPorts.fromBankName(bank);
-        _server = new BankRMIServer(serverPort);
+        _server = new BankRMIServer(serverPort);        //QUESTION: How to remove this dependency to the server module?
 
         try {
-            String serverUrl = String.format("rmi://localhost:%d/customer", ServerPorts.CustomerRMI.getPort()); // => "001"
+            String serverUrl = String.format("rmi://localhost:%d/customer", ServerPorts.CustomerRMI.getPort());
             _server = (ICustomerServer) Naming.lookup(serverUrl);
         } catch (MalformedURLException e) {
             e.printStackTrace();

@@ -1,12 +1,13 @@
-package Transport.RMI;
+package Server;
 
-import Contracts.ICustomerServer;
-import Contracts.IManagerServer;
+import Contracts.*;
 import Data.Bank;
 import Data.Customer;
 import Data.CustomerInfo;
 import Data.Loan;
 import Data.ServerPorts;
+import Services.CustomerService;
+import Services.OpenAccountThread;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
@@ -18,6 +19,8 @@ import java.util.Date;
 public class BankRMIServer implements ICustomerServer, IManagerServer {
 
     private static int _serverPort;
+    private static ICustomerService _customerService;
+    private static IManagerService _managerService;
 
     public static void main(String[] args) {
 
@@ -38,6 +41,7 @@ public class BankRMIServer implements ICustomerServer, IManagerServer {
     public BankRMIServer(int serverPort)
     {
         _serverPort = serverPort;
+        _customerService = new CustomerService();
     }
 
     public void exportServer() throws Exception {
@@ -48,10 +52,35 @@ public class BankRMIServer implements ICustomerServer, IManagerServer {
 
 
     @Override
-    public int openAccount(Bank bankId, String firstName, String lastName, String emailAddress, String phoneNumber, String password)
+    public int openAccount(Bank bank, String firstName, String lastName, String emailAddress, String phoneNumber, String password)
             throws RemoteException {
 
         //TODO: Real Implementation! (Create an actual account in the "database").
+
+
+        Thread openAccountTask = new Thread(
+                new OpenAccountThread(bank, firstName, lastName, emailAddress, phoneNumber,password));
+
+        //sync!!
+
+//        // pool of names that are being locked
+//        HashSet<String> pool = new HashSet<String>();
+//
+//        lock(name)
+//        synchronized(pool)
+//        while(pool.contains(name)) // already being locked
+//            pool.wait();           // wait for release
+//        pool.add(name);            // I lock it
+//
+//        unlock(name)
+//        synchronized(pool)
+//        pool.remove(name);
+//        pool.notifyAll();
+//
+
+        openAccountTask.start();
+
+        _customerService.openAccount(bank, firstName, lastName, emailAddress, phoneNumber, password);
 
         return 433333;     //Temp value to be able to implement client.
     }
