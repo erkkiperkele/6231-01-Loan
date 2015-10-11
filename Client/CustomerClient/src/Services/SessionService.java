@@ -17,7 +17,7 @@ public class SessionService implements ISessionService {
 
     private SessionService() {
         _loggerService = new LoggerService();
-        _currentCustomer = new Customer(0, "Default", "Customer", Bank.None);
+        _currentCustomer = new Customer(0, 0, "Default", "Customer", "none", Bank.None);
     }
 
     public static SessionService getInstance() {

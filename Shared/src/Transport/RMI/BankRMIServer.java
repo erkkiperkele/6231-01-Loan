@@ -60,22 +60,25 @@ public class BankRMIServer implements ICustomerServer, IManagerServer {
     public Customer getCustomer(Bank bank, String email, String password) throws RemoteException {
 
         //TODO: Real Implementation!
-        return new Customer(42, "TestFirstName", "TestLastName", Bank.Royal);
+        return new Customer(42, 4242, "TestFirstName", "TestLastName", "zaza", Bank.Royal);
     }
 
     @Override
-    public Loan getLoan(int bankId, int accountNumber, String password, long loanAmount)
+    public Loan getLoan(Bank bank, int accountNumber, String password, long loanAmount)
             throws RemoteException {
-        return null;
+
+        //TODO: Real implementation!
+        return new Loan(0, 0, 0, new Date());
     }
 
     @Override
-    public void delayPayment(int bankId, int loanID, Date currentDueDate, Date newDueDate) {
-
+    public void delayPayment(Bank bank, int loanID, Date currentDueDate, Date newDueDate) {
+        //TODO: Real implementation!
     }
 
     @Override
-    public CustomerInfo[] getCustomersInfo(int bankId) {
+    public CustomerInfo[] getCustomersInfo(Bank bank) {
+        //TODO: Real implementation!
         return new CustomerInfo[0];
     }
 }

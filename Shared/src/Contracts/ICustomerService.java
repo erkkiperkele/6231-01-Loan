@@ -11,6 +11,6 @@ public interface ICustomerService {
 
     int openAccount(Bank bankId, String firstName, String lastName, String emailAddress, String phoneNumber, String password);
     Customer getCustomer(Bank bank, String email, String password);
-    Loan getLoan(int bankId, int accountNumber, String password, long loanAmount);
+    Loan getLoan(Bank bank, int accountNumber, String password, long loanAmount);
 
 }

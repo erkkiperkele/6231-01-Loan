@@ -10,10 +10,16 @@ public class Customer implements Serializable {
     private String lastName;
     private Bank bank;
 
-    //accountNumber
-    //creditLimit
-    //email
-    //password
+    private int accountNumber;
+    private String password;
+
+    public int getAccountNumber() {
+        return accountNumber;
+    }
+
+    public String getPassword() {
+        return password;
+    }
 
     public int getId() {
         return id;
@@ -34,10 +40,12 @@ public class Customer implements Serializable {
         return bank;
     }
 
-    public Customer(int id, String firstName, String lastName, Bank bank) {
+    public Customer(int id, int accountNumber, String firstName, String lastName, String password, Bank bank) {
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
         this.bank = bank;
+        this.accountNumber = accountNumber;
+        this.password = password;
     }
 }

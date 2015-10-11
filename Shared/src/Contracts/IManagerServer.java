@@ -12,8 +12,9 @@ import java.util.Date;
  */
 public interface IManagerServer extends Remote {
 
-    void delayPayment(int bankId, int loanID, Date currentDueDate, Date newDueDate)
+    void delayPayment(Bank bank, int loanID, Date currentDueDate, Date newDueDate)
             throws RemoteException;
-    CustomerInfo[] getCustomersInfo(int bankId)
+
+    CustomerInfo[] getCustomersInfo(Bank bank)
             throws RemoteException;
 }

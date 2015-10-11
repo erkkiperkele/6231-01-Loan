@@ -1,7 +1,5 @@
 package Data;
 
-import Data.Bank;
-
 public enum ServerPorts {
 
     CustomerRMI,
@@ -24,8 +22,6 @@ public enum ServerPorts {
                 return 0;
         }
     }
-
-
 
     public static int fromBankName(Bank bank)
     {

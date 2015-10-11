@@ -3,6 +3,7 @@ package Presentation;
 import Contracts.ICustomerService;
 import Data.Bank;
 import Data.Customer;
+import Data.Loan;
 import Services.CustomerService;
 import Services.SessionService;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
@@ -36,8 +37,7 @@ public class CustomerConsole {
         String message = String.format(
                 "Please chose an option:"
                         + "%1$s 1: Open an account"
-                        + "%1$s 2: Open multiple accounts concurrently"
-                        + "%1$s 3: Sign in"
+                        + "%1$s 2: Get Loan"
                         + "%1$s Press any other key to exit."
                 , _console.newLine());
 
@@ -54,10 +54,8 @@ public class CustomerConsole {
                 displayOpenAccount();
                 break;
             case '2':
-                displayOpenMultipleAccounts();
-                break;
-            case '3':
-                displaySignin();
+                displayGetLoan();
+//                displaySignin();
                 break;
             default:
                 _console.println("See you!");
@@ -67,11 +65,14 @@ public class CustomerConsole {
         return isExiting;
     }
 
-    private static int displayOpenMultipleAccounts() {
+    private static void displayGetLoan() {
+        displaySignin();
 
+        Customer customer = SessionService.getInstance().getCurrentCustomer();
+        long loanAmount = askLoanAmount();
 
-        //TODO: Implement Concurrent account Creation.
-        throw new NotImplementedException();
+        getLoan(customer.getBank(), customer.getAccountNumber(), customer.getPassword(), loanAmount);
+        SessionService.getInstance().log().info(String.format("Requested a loan of %1$s $", loanAmount));
     }
 
     private static void displaySignin() {
@@ -85,7 +86,6 @@ public class CustomerConsole {
         SessionService.getInstance().log().info("User logged in");
 
         displayCurrentCustomerInfo();
-        displayChoices();
     }
 
     private static void displayCurrentCustomerInfo() {
@@ -113,7 +113,7 @@ public class CustomerConsole {
         int accountNumber = openAccount(bankId, firstName, lastName, email, phone, password);
 
         //TODO: Create ServerSide (getCustomer(accountNumber)
-        Customer newCustomer = new Customer(42, firstName, lastName, bankId);
+        Customer newCustomer = new Customer(42, accountNumber, firstName, lastName, password, bankId);
 
         SessionService.getInstance().signIn(newCustomer);
         SessionService.getInstance().log().info(String.format("Account #%d created.", accountNumber));
@@ -189,6 +189,17 @@ public class CustomerConsole {
         return answer;
     }
 
+    private static long askLoanAmount() {
+        _console.println("Enter required amount for the loan: ");
+        String userAnswer = _console.readString();
+        long answer = userAnswer.equals("")
+                ? 100
+                : Long.getLong(userAnswer);
+
+        displayAnswer(String.valueOf(answer));
+        return answer;
+    }
+
     private static int openAccount(
             Bank bankId,
             String firstName,
@@ -199,6 +210,14 @@ public class CustomerConsole {
 
         int accountNumber = _customerService.openAccount(bankId, firstName, lastName, email, phone, password);
         return accountNumber;
+    }
+
+    private static Loan getLoan(
+            Bank bankId,
+            int accountNumber,
+            String password,
+            long loanAmount) {
+        return _customerService.getLoan(bankId, accountNumber, password, loanAmount);
     }
 
     private static void displayAnswer(String answer) {

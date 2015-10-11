@@ -49,9 +49,9 @@ public class CustomerRMIClient implements ICustomerServer {
     }
 
     @Override
-    public Loan getLoan(int bankId, int accountNumber, String password, long loanAmount)
+    public Loan getLoan(Bank bank, int accountNumber, String password, long loanAmount)
             throws RemoteException {
-        return null;
+        return _server.getLoan(bank, accountNumber, password, loanAmount);
     }
 }
 

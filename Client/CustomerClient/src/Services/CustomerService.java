@@ -57,8 +57,15 @@ public class CustomerService implements ICustomerService {
     }
 
     @Override
-    public Loan getLoan(int bankId, int AccountNumber, String Password, long LoanAmount) {
-        return null;
+    public Loan getLoan(Bank bank, int accountNumber, String password, long loanAmount) {
+
+        try {
+            return _clients[bank.toInt() - 1].getLoan(bank, accountNumber, password, loanAmount);
+        } catch (RemoteException e) {
+            //TODO: Better exception handling!
+            e.printStackTrace();
+            return null;
+        }
     }
 
 }

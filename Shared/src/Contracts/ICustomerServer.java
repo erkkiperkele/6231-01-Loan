@@ -14,7 +14,7 @@ public interface ICustomerServer extends Remote {
             throws RemoteException;
     Customer getCustomer(Bank bank, String email, String password)
             throws RemoteException;
-    Loan getLoan(int bankId, int accountNumber, String password, long loanAmount)
+    Loan getLoan(Bank bankId, int accountNumber, String password, long loanAmount)
             throws RemoteException;
 
 }
