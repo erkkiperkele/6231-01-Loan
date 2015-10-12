@@ -16,6 +16,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Date;
+import java.util.List;
 
 public class BankRMIServer implements ICustomerServer, IManagerServer {
 
@@ -29,15 +30,34 @@ public class BankRMIServer implements ICustomerServer, IManagerServer {
 
         Bank serverName = Bank.fromInt(Integer.parseInt(args[0]));
         int serverPort = ServerPorts.fromBankName(serverName);
+        SessionService.getInstance().setBank(serverName);
 
         try {
             (new BankRMIServer(serverPort)).exportServer();
-            SessionService.getInstance().setBank(serverName);
 
             System.out.println(String.format("%s Server is up and running on port %d!", serverName, serverPort));
 
+            initialTesting();
+
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    private static void initialTesting() {
+
+        Customer maria = _customerService.getCustomer("maria.etinger@gmail.com");
+        System.out.println(maria.toString());
+
+        Customer justin = _customerService.getCustomer("justin.paquette@gmail.com");
+        System.out.println(justin.toString());
+
+        Customer alex = _customerService.getCustomer("alex.emond@gmail.com");
+        List<Loan> alexLoans = _customerService.getLoan(alex.getAccountNumber());
+
+        for (Loan loan : alexLoans)
+        {
+            System.out.println(loan.toString());
         }
     }
 
@@ -61,8 +81,9 @@ public class BankRMIServer implements ICustomerServer, IManagerServer {
         //TODO: Real Implementation! (Create an actual account in the "database").
 
 
-        Thread openAccountTask = new Thread(
-                new OpenAccountThread(bank, firstName, lastName, emailAddress, phoneNumber,password));
+//        Thread openAccountTask = new Thread(
+//                new OpenAccountThread(bank, firstName, lastName, emailAddress, phoneNumber,password));
+//        openAccountTask.start();
 
         //sync!!
 
@@ -81,7 +102,6 @@ public class BankRMIServer implements ICustomerServer, IManagerServer {
 //        pool.notifyAll();
 //
 
-        openAccountTask.start();
 
         _customerService.openAccount(bank, firstName, lastName, emailAddress, phoneNumber, password);
 
@@ -92,7 +112,7 @@ public class BankRMIServer implements ICustomerServer, IManagerServer {
     public Customer getCustomer(Bank bank, String email, String password) throws RemoteException {
 
         //TODO: Real Implementation!
-        return new Customer(42, 4242, "TestFirstName", "TestLastName", "zaza", Bank.Royal);
+        return new Customer(42, 4242, "TestFirstName", "TestLastName", "zaza", Bank.Royal, "test.littletest@gmail.com");
     }
 
     @Override

@@ -57,12 +57,31 @@ public class Customer implements Serializable {
         return bank;
     }
 
-    public Customer(int id, int accountNumber, String firstName, String lastName, String password, Bank bank) {
+    public Customer(int id, int accountNumber, String firstName, String lastName, String password, Bank bank, String email) {
         this.id = id;
+        this.accountNumber = accountNumber;
         this.firstName = firstName;
         this.lastName = lastName;
         this.bank = bank;
-        this.accountNumber = accountNumber;
         this.password = password;
+        this.email = email;
+    }
+
+    public String toString()
+    {
+        String displayInfo = "";
+
+        displayInfo += (this.id + " - ");
+        displayInfo += (this.accountNumber + " - ");
+        displayInfo += (this.firstName + " - ");
+        displayInfo += (this.lastName + " - ");
+        displayInfo += (this.bank + " - ");
+        displayInfo += (this.email);
+
+        return displayInfo;
+    }
+
+    public void setAccountNumber(int accountNumber) {
+        this.accountNumber = accountNumber;
     }
 }

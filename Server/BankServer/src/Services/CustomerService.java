@@ -3,13 +3,18 @@ package Services;
 import Contracts.ICustomerService;
 import Data.Bank;
 import Data.Customer;
+import Data.DataRepository;
 import Data.Loan;
+
+import java.util.List;
 
 public class CustomerService implements ICustomerService {
 
+    private DataRepository repository;
+
     public CustomerService()
     {
-
+        repository = new DataRepository();
     }
 
     @Override
@@ -22,12 +27,14 @@ public class CustomerService implements ICustomerService {
     }
 
     @Override
-    public Customer getCustomer(Bank bank, String email, String password) {
-        return null;
+    public Customer getCustomer(String email)
+    {
+        return repository.getCustomer(email);
     }
 
     @Override
-    public Loan getLoan(Bank bank, int accountNumber, String password, long loanAmount) {
-        return null;
+    public List<Loan> getLoan(int accountNumber) {
+
+        return repository.getLoans(accountNumber);
     }
 }

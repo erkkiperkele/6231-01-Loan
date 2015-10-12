@@ -34,31 +34,51 @@ public class DataRepository {
         //TODO: populate!
     }
 
-    public Account getAccount(Customer owner) {
-        String index = getIndex(owner);
+    public Customer getCustomer(String userName)
+    {
+        String index = getIndex(userName);
+
+        Account customerAccount = getAccount(userName);
+
+        return customerAccount == null
+                ? null
+                : customerAccount.getOwner();
+    }
+
+    public Account getAccount(String userName) {
+        String index = getIndex(userName);
 
         //TODO: verify it works
         return this.accounts.get(index)
                 .stream()
-                .filter(a -> a.getOwner().getUserName() == owner.getUserName())
+                .filter(a -> a.getOwner().getUserName() == userName)
                 .findFirst()
                 .orElse(null);
     }
 
     public void createAccount(Customer owner) {
+
         if (owner.getId() == 0) {
             owner.setId(++customerNumber);
         }
 
-        String index = getIndex(owner);
+        String index = getIndex(owner.getUserName());
         Account newAccount = new Account(getNewAccountNumber(), owner);
+        owner.setAccountNumber(newAccount.getAccountNumber());
 
-        //TODO: Check if value is being set in hashmap or if I need to put() the whole list again!!!
+        if (this.accounts.get(index) == null)
+        {
+            this.accounts.put(index, new ArrayList<>());
+        }
+
         this.accounts.get(index).add(newAccount);
     }
 
-    public List<Loan> getLoans(Customer customer) {
-        String index = getIndex(customer);
+    public List<Loan> getLoans(int accountNumber) {
+
+        Customer customer = getCustomer(accountNumber);
+
+        String index = getIndex(customer.getUserName());
         List<Loan> loans = this.loans.get(index);
 
         List<Loan> customerLoans = new ArrayList<>();
@@ -71,17 +91,23 @@ public class DataRepository {
         return customerLoans;
     }
 
-    public void createLoan(Customer owner, long amount, Date dueDate) {
-        String index = getIndex(owner);
-        Loan newLoan = new Loan(getNewLoanNumber(), owner.getAccountNumber(), amount, dueDate);
+    public void createLoan(String userName, long amount, Date dueDate) {
+        String index = getIndex(userName);
 
-        //TODO: Check if value is being set in hashmap or if I need to put() the whole list again!!!
+        int customerAccountNumber = getAccount(userName).getAccountNumber();
+        Loan newLoan = new Loan(getNewLoanNumber(), customerAccountNumber, amount, dueDate);
+
+        if (this.loans.get(index) == null)
+        {
+            this.loans.put(index, new ArrayList<>());
+        }
+
         this.loans.get(index).add(newLoan);
     }
 
 
     public void updateLoan(Customer customer, int loanNumber, Date newDueDate) {
-        String index = getIndex(customer);
+        String index = getIndex(customer.getUserName());
 
         //TODO: check if stream modifies entity inside the collection....
         this.loans.get(index)
@@ -92,8 +118,20 @@ public class DataRepository {
                 .setDueDate(newDueDate);
     }
 
-    private String getIndex(Customer customer) {
-        return customer.getUserName().substring(0, 0);
+    private Customer getCustomer(int accountNumber)
+    {
+        return this.accounts.values()
+            .stream()
+            .flatMap(accounts -> accounts
+                .stream()
+                .filter(x -> x.getAccountNumber() == accountNumber)
+                .map(a -> a.getOwner()))
+            .findFirst()
+            .orElse(null);
+    }
+
+    private String getIndex(String userName){
+        return userName.substring(0, 1);
     }
 
     private int getNewAccountNumber() {
@@ -111,14 +149,15 @@ public class DataRepository {
     private void generateInitialData() {
 
         Bank bank = SessionService.getInstance().getBank();
+
         Calendar calendar = Calendar.getInstance();
         calendar.add(calendar.MONTH, 1);
 
         Date dueDate = calendar.getTime();
 
-        Customer alex = new Customer(0, 0, "Alex", "Emond", "at", bank);
-        Customer justin = new Customer(0, 0, "Justin", "Paquette", "jp", bank);
-        Customer maria = new Customer(0, 0, "Maria", "Etinger", "me", bank);
+        Customer alex = new Customer(0, 0, "Alex", "Emond", "at", bank, "alex.emond@gmail.com");
+        Customer justin = new Customer(0, 0, "Justin", "Paquette", "jp", bank, "justin.paquette@gmail.com");
+        Customer maria = new Customer(0, 0, "Maria", "Etinger", "me", bank, "maria.etinger@gmail.com");
 
         //Those 3 have an account on each bank
         createAccount(alex);
@@ -126,25 +165,25 @@ public class DataRepository {
         createAccount(maria);
 
         if (bank == Bank.Royal) {
-            Customer sylvain = new Customer(0, 0, "Sylvain", "Poudrier", "sp", bank);
+            Customer sylvain = new Customer(0, 0, "Sylvain", "Poudrier", "sp", bank, "sylvain.poudrier@gmail.com");
             createAccount(sylvain);
 
-            createLoan(alex, 200, dueDate);
+            createLoan(alex.getUserName(), 200, dueDate);
         }
 
         if (bank == Bank.National) {
-            Customer pascal = new Customer(0, 0, "Pascal", "Groulx", "pg", bank);
+            Customer pascal = new Customer(0, 0, "Pascal", "Groulx", "pg", bank, "pascal.groulx@gmail.com");
             createAccount(pascal);
 
-            createLoan(alex, 300, dueDate);
+            createLoan(alex.getUserName(), 300, dueDate);
         }
 
         if (bank == Bank.Dominion) {
-            Customer max =new Customer(0, 0, "Max", "Tanquerel", "mt", bank);
+            Customer max =new Customer(0, 0, "Max", "Tanquerel", "mt", bank, "max.tanquerel@gmail.com");
             createAccount(max);
 
-            createLoan(justin, 1000, dueDate);
-            createLoan(maria, 500, dueDate);
+            createLoan(justin.getUserName(), 1000, dueDate);
+            createLoan(maria.getUserName(), 500, dueDate);
         }
     }
 }

@@ -36,4 +36,16 @@ public class Loan implements Serializable {
     public void setDueDate(Date dueDate) {
         this.dueDate = dueDate;
     }
+
+    public String toString()
+    {
+        String displayInfo = "";
+
+        displayInfo += (this.loanNumber + " - ");
+        displayInfo += (this.customerAccountNumber + " - ");
+        displayInfo += (this.amount + " - ");
+        displayInfo += (this.dueDate + " - ");
+
+        return displayInfo;
+    }
 }
