@@ -6,7 +6,8 @@ import Data.Customer;
 import Data.Loan;
 import Services.CustomerService;
 import Services.SessionService;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+
+import javax.security.auth.login.FailedLoginException;
 
 public class CustomerConsole {
 
@@ -15,7 +16,7 @@ public class CustomerConsole {
 
     public static void main(String[] args) {
 
-        //TODO: Don't forget about logging!
+        //TODO: ManagerClient!!
 
         //QUESTIONS:
         //- Does the client have to execute asynchronous requests?
@@ -55,7 +56,6 @@ public class CustomerConsole {
                 break;
             case '2':
                 displayGetLoan();
-//                displaySignin();
                 break;
             default:
                 _console.println("See you!");
@@ -80,12 +80,16 @@ public class CustomerConsole {
         String email = askEmail();
         String password = askPassword();
 
-        Customer customer = _customerService.getCustomer(bank, email, password);
+        try {
+            Customer customer = _customerService.signIn(bank, email, password);
+            SessionService.getInstance().setCurrentCustomer(customer);
+            displayCurrentCustomerInfo();
 
-        SessionService.getInstance().signIn(customer);
-        SessionService.getInstance().log().info("User logged in");
+        } catch (FailedLoginException e) {
+            SessionService.getInstance().log().error("Wrong email or password, please try again.");
+            displaySignin();
+        }
 
-        displayCurrentCustomerInfo();
     }
 
     private static void displayCurrentCustomerInfo() {
@@ -101,7 +105,7 @@ public class CustomerConsole {
 
     private static void displayOpenAccount() {
 
-        Bank bankId = askBankId();
+        Bank bank = askBankId();
         String firstName = askFirstName();
         String lastName = askLastName();
         String email = askEmail();
@@ -110,13 +114,15 @@ public class CustomerConsole {
 
         SessionService.getInstance().log().info("Requesting server to open a new account:");
 
-        int accountNumber = openAccount(bankId, firstName, lastName, email, phone, password);
-
-        //TODO: Create ServerSide (getCustomer(accountNumber)
-        Customer newCustomer = new Customer(42, accountNumber, firstName, lastName, password, bankId, email);
-
-        SessionService.getInstance().signIn(newCustomer);
+        int accountNumber = openAccount(bank, firstName, lastName, email, phone, password);
         SessionService.getInstance().log().info(String.format("Account #%d created.", accountNumber));
+
+        try {
+            Customer newCustomer = _customerService.getCustomer(bank, email, password);
+            SessionService.getInstance().setCurrentCustomer(newCustomer);
+        } catch (FailedLoginException e) {
+            //Should not happen, account was created with this email.
+        }
     }
 
     private static Bank askBankId() {

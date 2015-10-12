@@ -44,7 +44,7 @@ public class FileLogger implements IFileLogger {
 
         try {
             _logger.write(outputMessage.getBytes());
-            System.out.println(outputMessage);
+            System.out.println(outputMessage.trim());
         } catch (IOException e) {
             e.printStackTrace();
         }

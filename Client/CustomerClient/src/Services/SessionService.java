@@ -17,7 +17,7 @@ public class SessionService implements ISessionService {
 
     private SessionService() {
         _loggerService = new LoggerService();
-        _currentCustomer = new Customer(0, 0, "Default", "Customer", "none", Bank.None);
+        _currentCustomer = new Customer(0, 0, "Default", "Customer", "none", Bank.None, "default.customer@default.com", "514.111.2222");
     }
 
     public static SessionService getInstance() {
@@ -25,10 +25,9 @@ public class SessionService implements ISessionService {
     }
 
     @Override
-    public void signIn(Customer currentCustomer) {
-
-        //TODO: Implement Validation
+    public void setCurrentCustomer(Customer currentCustomer) {
         _currentCustomer = currentCustomer;
+        log().info(String.format("User %s just signed in.", currentCustomer.getFirstName()));
     }
 
     @Override
@@ -38,6 +37,6 @@ public class SessionService implements ISessionService {
 
     @Override
     public IFileLogger log() {
-        return _loggerService.getLogger(_currentCustomer);
+        return _loggerService.getLogger();
     }
 }

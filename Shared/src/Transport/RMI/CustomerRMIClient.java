@@ -7,6 +7,7 @@ import Data.Loan;
 import Data.ServerPorts;
 import Server.BankRMIServer;
 
+import javax.security.auth.login.FailedLoginException;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
@@ -45,8 +46,13 @@ public class CustomerRMIClient implements ICustomerServer {
     }
 
     @Override
-    public Customer getCustomer(Bank bank, String email, String password) throws RemoteException {
+    public Customer getCustomer(Bank bank, String email, String password) throws RemoteException, FailedLoginException {
         return _server.getCustomer(bank, email, password);
+    }
+
+    @Override
+    public Customer signIn(Bank bank, String email, String password) throws RemoteException, FailedLoginException {
+        return _server.signIn(bank, email, password);
     }
 
     @Override

@@ -48,7 +48,7 @@ public class DataRepository {
 
         return getAccountsAtIndex(index)
                 .stream()
-                .filter(a -> a.getOwner().getUserName() == userName)
+                .filter(a -> a.getOwner().getUserName().equalsIgnoreCase(userName))
                 .findFirst()
                 .orElse(null);
     }
@@ -58,6 +58,7 @@ public class DataRepository {
         if (owner.getId() == 0) {
             owner.setId(++customerNumber);
         }
+        owner.setBank(SessionService.getInstance().getBank());
 
         String index = getIndex(owner.getUserName());
         Account newAccount = new Account(getNewAccountNumber(), owner);
@@ -70,7 +71,7 @@ public class DataRepository {
 
         Customer customer = getCustomer(accountNumber);
 
-        String index = getIndex(customer.getUserName());
+        String index = getIndex(customer.getUserName().toLowerCase());
 
         return getLoansAtIndex(index)
                 .stream()
@@ -113,7 +114,7 @@ public class DataRepository {
     }
 
     private String getIndex(String userName){
-        return userName.substring(0, 1);
+        return userName.toLowerCase().substring(0, 1);
     }
 
     private List<Loan> getLoansAtIndex(String index)
@@ -157,9 +158,9 @@ public class DataRepository {
 
         Date dueDate = calendar.getTime();
 
-        Customer alex = new Customer(0, 0, "Alex", "Emond", "at", bank, "alex.emond@gmail.com");
-        Customer justin = new Customer(0, 0, "Justin", "Paquette", "jp", bank, "justin.paquette@gmail.com");
-        Customer maria = new Customer(0, 0, "Maria", "Etinger", "me", bank, "maria.etinger@gmail.com");
+        Customer alex = new Customer(0, 0, "Alex", "Emond", "at", bank, "alex.emond@gmail.com", "514.111.2222");
+        Customer justin = new Customer(0, 0, "Justin", "Paquette", "jp", bank, "justin.paquette@gmail.com", "514.111.2222");
+        Customer maria = new Customer(0, 0, "Maria", "Etinger", "me", bank, "maria.etinger@gmail.com", "514.111.2222");
 
         //Those 3 have an account on each bank
         createAccount(alex);
@@ -167,21 +168,21 @@ public class DataRepository {
         createAccount(maria);
 
         if (bank == Bank.Royal) {
-            Customer sylvain = new Customer(0, 0, "Sylvain", "Poudrier", "sp", bank, "sylvain.poudrier@gmail.com");
+            Customer sylvain = new Customer(0, 0, "Sylvain", "Poudrier", "sp", bank, "sylvain.poudrier@gmail.com", "514.111.2222");
             createAccount(sylvain);
 
             createLoan(alex.getUserName(), 200, dueDate);
         }
 
         if (bank == Bank.National) {
-            Customer pascal = new Customer(0, 0, "Pascal", "Groulx", "pg", bank, "pascal.groulx@gmail.com");
+            Customer pascal = new Customer(0, 0, "Pascal", "Groulx", "pg", bank, "pascal.groulx@gmail.com", "514.111.2222");
             createAccount(pascal);
 
             createLoan(alex.getUserName(), 300, dueDate);
         }
 
         if (bank == Bank.Dominion) {
-            Customer max =new Customer(0, 0, "Max", "Tanquerel", "mt", bank, "max.tanquerel@gmail.com");
+            Customer max =new Customer(0, 0, "Max", "Tanquerel", "mt", bank, "max.tanquerel@gmail.com", "514.111.2222");
             createAccount(max);
 
             createLoan(justin.getUserName(), 1000, dueDate);

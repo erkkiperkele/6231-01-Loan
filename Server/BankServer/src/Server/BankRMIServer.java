@@ -10,6 +10,7 @@ import Services.CustomerService;
 import Services.OpenAccountThread;
 import Services.SessionService;
 
+import javax.security.auth.login.FailedLoginException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -35,6 +36,8 @@ public class BankRMIServer implements ICustomerServer, IManagerServer {
         try {
             (new BankRMIServer(serverPort)).exportServer();
 
+            _customerService = new CustomerService();
+
             SessionService.getInstance().log().info(String.format("%s Server is up and running on port %d!", serverName, serverPort));
 
             initialTesting();
@@ -42,6 +45,90 @@ public class BankRMIServer implements ICustomerServer, IManagerServer {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public BankRMIServer(int serverPort)
+    {
+        _serverPort = serverPort;
+    }
+
+    public void exportServer() throws Exception {
+        Remote obj = UnicastRemoteObject.exportObject(this, _serverPort);
+        Registry r = LocateRegistry.createRegistry(_serverPort);
+        r.bind("customer", obj);
+    }
+
+
+    @Override
+    public int openAccount(Bank bank, String firstName, String lastName, String emailAddress, String phoneNumber, String password)
+            throws RemoteException {
+
+        //TODO: Synchronize access!
+
+
+//        Thread openAccountTask = new Thread(
+//                new OpenAccountThread(bank, firstName, lastName, emailAddress, phoneNumber,password));
+//        openAccountTask.start();
+
+        //sync!!
+
+//        // pool of names that are being locked
+//        HashSet<String> pool = new HashSet<String>();
+//
+//        lock(name)
+//        synchronized(pool)
+//        while(pool.contains(name)) // already being locked
+//            pool.wait();           // wait for release
+//        pool.add(name);            // I lock it
+//
+//        unlock(name)
+//        synchronized(pool)
+//        pool.remove(name);
+//        pool.notifyAll();
+//
+
+
+       int accountNumber = _customerService.openAccount(bank, firstName, lastName, emailAddress, phoneNumber, password);
+
+        return accountNumber;
+    }
+
+    @Override
+    public Customer getCustomer(Bank bank, String email, String password)
+            throws RemoteException, FailedLoginException {
+
+        Customer foundCustomer = _customerService.getCustomer(email);
+
+        if (!foundCustomer.getPassword().equals(password))
+        {
+            throw new FailedLoginException(String.format("Wrong password for email %s", email));
+        }
+
+        return foundCustomer;
+    }
+
+    @Override
+    public Customer signIn(Bank bank, String email, String password) throws RemoteException, FailedLoginException {
+        return getCustomer(bank, email, password);
+    }
+
+    @Override
+    public Loan getLoan(Bank bank, int accountNumber, String password, long loanAmount)
+            throws RemoteException {
+
+        //TODO: Real implementation!
+        return new Loan(0, 0, 0, new Date());
+    }
+
+    @Override
+    public void delayPayment(Bank bank, int loanID, Date currentDueDate, Date newDueDate) {
+        //TODO: Real implementation!
+    }
+
+    @Override
+    public CustomerInfo[] getCustomersInfo(Bank bank) {
+        //TODO: Real implementation!
+        return new CustomerInfo[0];
     }
 
     private static void initialTesting() {
@@ -86,78 +173,5 @@ public class BankRMIServer implements ICustomerServer, IManagerServer {
         else{
             SessionService.getInstance().log().info(String.format("%1$s has no loans currently", customerName));
         }
-    }
-
-    public BankRMIServer(int serverPort)
-    {
-        _serverPort = serverPort;
-        _customerService = new CustomerService();
-    }
-
-    public void exportServer() throws Exception {
-        Remote obj = UnicastRemoteObject.exportObject(this, _serverPort);
-        Registry r = LocateRegistry.createRegistry(_serverPort);
-        r.bind("customer", obj);
-    }
-
-
-    @Override
-    public int openAccount(Bank bank, String firstName, String lastName, String emailAddress, String phoneNumber, String password)
-            throws RemoteException {
-
-        //TODO: Real Implementation! (Create an actual account in the "database").
-
-
-//        Thread openAccountTask = new Thread(
-//                new OpenAccountThread(bank, firstName, lastName, emailAddress, phoneNumber,password));
-//        openAccountTask.start();
-
-        //sync!!
-
-//        // pool of names that are being locked
-//        HashSet<String> pool = new HashSet<String>();
-//
-//        lock(name)
-//        synchronized(pool)
-//        while(pool.contains(name)) // already being locked
-//            pool.wait();           // wait for release
-//        pool.add(name);            // I lock it
-//
-//        unlock(name)
-//        synchronized(pool)
-//        pool.remove(name);
-//        pool.notifyAll();
-//
-
-
-        _customerService.openAccount(bank, firstName, lastName, emailAddress, phoneNumber, password);
-
-        return 433333;     //Temp value to be able to implement client.
-    }
-
-    @Override
-    public Customer getCustomer(Bank bank, String email, String password) throws RemoteException {
-
-        //TODO: Real Implementation!
-        return new Customer(42, 4242, "TestFirstName", "TestLastName", "zaza", Bank.Royal, "test.littletest@gmail.com");
-    }
-
-    @Override
-    public Loan getLoan(Bank bank, int accountNumber, String password, long loanAmount)
-            throws RemoteException {
-
-        //TODO: Real implementation!
-        return new Loan(0, 0, 0, new Date());
-    }
-
-    @Override
-    public void delayPayment(Bank bank, int loanID, Date currentDueDate, Date newDueDate) {
-        //TODO: Real implementation!
-    }
-
-    @Override
-    public CustomerInfo[] getCustomersInfo(Bank bank) {
-        //TODO: Real implementation!
-        return new CustomerInfo[0];
     }
 }

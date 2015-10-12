@@ -4,6 +4,7 @@ import java.io.Serializable;
 
 public class Customer implements Serializable {
 
+    private String phone;
     private int id;
 
     private String firstName;
@@ -18,7 +19,7 @@ public class Customer implements Serializable {
     }
 
     public String getUserName() {
-        return email;
+        return email.toLowerCase();
     }
 
 
@@ -57,7 +58,7 @@ public class Customer implements Serializable {
         return bank;
     }
 
-    public Customer(int id, int accountNumber, String firstName, String lastName, String password, Bank bank, String email) {
+    public Customer(int id, int accountNumber, String firstName, String lastName, String password, Bank bank, String email, String phone) {
         this.id = id;
         this.accountNumber = accountNumber;
         this.firstName = firstName;
@@ -65,6 +66,15 @@ public class Customer implements Serializable {
         this.bank = bank;
         this.password = password;
         this.email = email;
+        this.phone = phone;
+    }
+
+    public Customer(String firstName, String lastName, String password, String email, String phone) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.password = password;
+        this.email = email;
+        this.phone = phone;
     }
 
     public String toString()
@@ -83,5 +93,9 @@ public class Customer implements Serializable {
 
     public void setAccountNumber(int accountNumber) {
         this.accountNumber = accountNumber;
+    }
+
+    public void setBank(Bank bank) {
+        this.bank = bank;
     }
 }

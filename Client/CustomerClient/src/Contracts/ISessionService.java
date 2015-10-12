@@ -10,7 +10,7 @@ import Data.Customer;
  */
 public interface ISessionService {
 
-    void signIn(Customer currentCustomer);
+    void setCurrentCustomer(Customer currentCustomer);
     Customer getCurrentCustomer();
     IFileLogger log();
 }
