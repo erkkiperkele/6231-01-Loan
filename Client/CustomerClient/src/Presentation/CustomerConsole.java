@@ -113,7 +113,7 @@ public class CustomerConsole {
         int accountNumber = openAccount(bankId, firstName, lastName, email, phone, password);
 
         //TODO: Create ServerSide (getCustomer(accountNumber)
-        Customer newCustomer = new Customer(42, accountNumber, firstName, lastName, password, bankId);
+        Customer newCustomer = new Customer(42, accountNumber, firstName, lastName, password, bankId, email);
 
         SessionService.getInstance().signIn(newCustomer);
         SessionService.getInstance().log().info(String.format("Account #%d created.", accountNumber));

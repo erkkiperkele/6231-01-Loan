@@ -3,6 +3,7 @@ package Data;
 import Services.SessionService;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * The accounts and loans are placed in several lists
@@ -31,13 +32,10 @@ public class DataRepository {
         this.loans = new Hashtable<>();
 
         generateInitialData();
-        //TODO: populate!
     }
 
     public Customer getCustomer(String userName)
     {
-        String index = getIndex(userName);
-
         Account customerAccount = getAccount(userName);
 
         return customerAccount == null
@@ -48,8 +46,7 @@ public class DataRepository {
     public Account getAccount(String userName) {
         String index = getIndex(userName);
 
-        //TODO: verify it works
-        return this.accounts.get(index)
+        return getAccountsAtIndex(index)
                 .stream()
                 .filter(a -> a.getOwner().getUserName() == userName)
                 .findFirst()
@@ -66,12 +63,7 @@ public class DataRepository {
         Account newAccount = new Account(getNewAccountNumber(), owner);
         owner.setAccountNumber(newAccount.getAccountNumber());
 
-        if (this.accounts.get(index) == null)
-        {
-            this.accounts.put(index, new ArrayList<>());
-        }
-
-        this.accounts.get(index).add(newAccount);
+        getAccountsAtIndex(index).add(newAccount);
     }
 
     public List<Loan> getLoans(int accountNumber) {
@@ -79,16 +71,11 @@ public class DataRepository {
         Customer customer = getCustomer(accountNumber);
 
         String index = getIndex(customer.getUserName());
-        List<Loan> loans = this.loans.get(index);
 
-        List<Loan> customerLoans = new ArrayList<>();
-
-        for (Loan loan : loans) {
-            if (loan.getCustomerAccountNumber() == customer.getAccountNumber()) {
-                customerLoans.add(loan);
-            }
-        }
-        return customerLoans;
+        return getLoansAtIndex(index)
+                .stream()
+                .filter(l -> l.getCustomerAccountNumber() == customer.getAccountNumber())
+                .collect(Collectors.toList());
     }
 
     public void createLoan(String userName, long amount, Date dueDate) {
@@ -97,12 +84,7 @@ public class DataRepository {
         int customerAccountNumber = getAccount(userName).getAccountNumber();
         Loan newLoan = new Loan(getNewLoanNumber(), customerAccountNumber, amount, dueDate);
 
-        if (this.loans.get(index) == null)
-        {
-            this.loans.put(index, new ArrayList<>());
-        }
-
-        this.loans.get(index).add(newLoan);
+        getLoansAtIndex(index).add(newLoan);
     }
 
 
@@ -110,7 +92,7 @@ public class DataRepository {
         String index = getIndex(customer.getUserName());
 
         //TODO: check if stream modifies entity inside the collection....
-        this.loans.get(index)
+        getLoansAtIndex(index)
                 .stream()
                 .filter(l -> l.getLoanNumber() == loanNumber)
                 .findFirst()
@@ -123,15 +105,35 @@ public class DataRepository {
         return this.accounts.values()
             .stream()
             .flatMap(accounts -> accounts
-                .stream()
-                .filter(x -> x.getAccountNumber() == accountNumber)
-                .map(a -> a.getOwner()))
+                    .stream()
+                    .filter(x -> x.getAccountNumber() == accountNumber)
+                    .map(a -> a.getOwner()))
             .findFirst()
             .orElse(null);
     }
 
     private String getIndex(String userName){
         return userName.substring(0, 1);
+    }
+
+    private List<Loan> getLoansAtIndex(String index)
+    {
+        if (this.loans.get(index) == null)
+        {
+            this.loans.put(index, new ArrayList<>());
+        }
+
+        return this.loans.get(index);
+    }
+
+    private List<Account> getAccountsAtIndex(String index)
+    {
+        if (this.accounts.get(index) == null)
+        {
+            this.accounts.put(index, new ArrayList<>());
+        }
+
+        return this.accounts.get(index);
     }
 
     private int getNewAccountNumber() {

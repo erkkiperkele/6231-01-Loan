@@ -35,7 +35,7 @@ public class BankRMIServer implements ICustomerServer, IManagerServer {
         try {
             (new BankRMIServer(serverPort)).exportServer();
 
-            System.out.println(String.format("%s Server is up and running on port %d!", serverName, serverPort));
+            SessionService.getInstance().log().info(String.format("%s Server is up and running on port %d!", serverName, serverPort));
 
             initialTesting();
 
@@ -45,19 +45,46 @@ public class BankRMIServer implements ICustomerServer, IManagerServer {
     }
 
     private static void initialTesting() {
+        String unknownUsername = "dummy@dummy.com";
+        Customer unknown = _customerService.getCustomer(unknownUsername);
+        printCustomer(unknown, unknownUsername);
 
-        Customer maria = _customerService.getCustomer("maria.etinger@gmail.com");
-        System.out.println(maria.toString());
+        String mariaUsername = "maria.etinger@gmail.com";
+        Customer maria = _customerService.getCustomer(mariaUsername);
+        printCustomer(maria, mariaUsername);
 
-        Customer justin = _customerService.getCustomer("justin.paquette@gmail.com");
-        System.out.println(justin.toString());
+        String justinUsername = "justin.paquette@gmail.com";
+        Customer justin = _customerService.getCustomer(justinUsername);
+        printCustomer(justin, justinUsername);
 
-        Customer alex = _customerService.getCustomer("alex.emond@gmail.com");
+        String alexUserName = "alex.emond@gmail.com";
+        Customer alex = _customerService.getCustomer(alexUserName);
+        printCustomer(alex, alexUserName);
+
         List<Loan> alexLoans = _customerService.getLoan(alex.getAccountNumber());
+        printLoans(alexLoans, alex.getFirstName());
+    }
 
-        for (Loan loan : alexLoans)
+    private static void printCustomer(Customer customer, String username) {
+        if (customer != null)
         {
-            System.out.println(loan.toString());
+            SessionService.getInstance().log().info(customer.toString());
+        }
+        else
+        {
+            SessionService.getInstance().log().info(String.format("No customer found for this username %s", username));
+        }
+    }
+
+    private static void printLoans(List<Loan> loans, String customerName)
+    {
+        if (loans != null && loans.size() >0) {
+            for (Loan loan : loans) {
+                SessionService.getInstance().log().info(loan.toString());
+            }
+        }
+        else{
+            SessionService.getInstance().log().info(String.format("%1$s has no loans currently", customerName));
         }
     }
 
