@@ -10,54 +10,49 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class LoggerService implements ILoggerService, Closeable {
-    private Map<Integer, IFileLogger> _loggers;
-    private String _rootPath = "./Logs/";
+    //    private Map<Integer, IFileLogger> _loggers;
+    private IFileLogger logger;
+    private final String _rootPath = "./LogsServer/";
 
     public LoggerService() {
-        _loggers = new HashMap<>();
+
+//        _loggers = new HashMap<>();
     }
 
 
     @Override
     public void close() throws IOException {
-        for (IFileLogger logger : _loggers.values()) {
-            logger.close();
-        }
+        logger.close();
     }
 
     @Override
     public IFileLogger getLogger() {
-        Customer currentCustomer = SessionService.getInstance().getCurrentCustomer();
-        return getLazyLogger(currentCustomer);
+
+        return getLazyLogger();
     }
 
-    private IFileLogger getLazyLogger(Customer currentCustomer) {
+    private IFileLogger getLazyLogger() {
 
-        IFileLogger logger = _loggers.get(currentCustomer.getId());
 
-        if (logger == null) {
-            logger = createCustomerLogger(currentCustomer);
+        if (this.logger == null) {
+            this.logger = createLogger();
         }
-        return logger;
+        return this.logger;
     }
 
-    private IFileLogger createCustomerLogger(Customer currentCustomer) {
+    private IFileLogger createLogger() {
 
+        String serverName = SessionService.getInstance().getBank().name();
         String path =
                 _rootPath
-                        + currentCustomer.getFirstName()
-                        + "_"
-                        + currentCustomer.getLastName()
-                        + "_"
-                        + currentCustomer.getBank()
+                        + serverName
                         + ".txt";
 
         createFile(path);
 
-        IFileLogger logger = new FileLogger(path);
-        _loggers.put(currentCustomer.getId(), logger);
+        IFileLogger newLogger = new FileLogger(path);
 
-        return logger;
+        return newLogger;
     }
 
     private void createFile(String path) {

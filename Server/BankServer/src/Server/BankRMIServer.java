@@ -8,6 +8,7 @@ import Data.Loan;
 import Data.ServerPorts;
 import Services.CustomerService;
 import Services.OpenAccountThread;
+import Services.SessionService;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
@@ -31,6 +32,8 @@ public class BankRMIServer implements ICustomerServer, IManagerServer {
 
         try {
             (new BankRMIServer(serverPort)).exportServer();
+            SessionService.getInstance().setBank(serverName);
+
             System.out.println(String.format("%s Server is up and running on port %d!", serverName, serverPort));
 
         } catch (Exception e) {
