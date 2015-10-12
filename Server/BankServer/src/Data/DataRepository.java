@@ -3,18 +3,12 @@ package Data;
 import Services.SessionService;
 
 import java.util.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 /**
- * The accounts and loans are placed in several lists
- * that are stored in a hash map according to the
- * first character of the username indicated in the account.
- * <p>
- * For example, all the accounts with the username starting with an “A”
- * will belong to the same list and will be stored in a hash table
- * (acting as the database) using the key “A”
  */
-
 public class DataRepository {
 
 
@@ -25,6 +19,8 @@ public class DataRepository {
     private int loanNumber = 1;
     private int customerNumber = 1;
 
+    private HashMap<String, Lock> locks;
+
 
     public DataRepository() {
 
@@ -34,8 +30,7 @@ public class DataRepository {
         generateInitialData();
     }
 
-    public Customer getCustomer(String userName)
-    {
+    public Customer getCustomer(String userName) {
         Account customerAccount = getAccount(userName);
 
         return customerAccount == null
@@ -55,16 +50,21 @@ public class DataRepository {
 
     public void createAccount(Customer owner) {
 
+        if (getAccount(owner.getUserName()) != null) {
+            return;
+        }
+
+        //PATCH: bad pattern. To be corrected.
         if (owner.getId() == 0) {
             owner.setId(++customerNumber);
         }
         owner.setBank(SessionService.getInstance().getBank());
+        //END OF PATCH
 
-        String index = getIndex(owner.getUserName());
         Account newAccount = new Account(getNewAccountNumber(), owner);
         owner.setAccountNumber(newAccount.getAccountNumber());
 
-        getAccountsAtIndex(index).add(newAccount);
+        createAccountThreadSafe(owner, newAccount);
     }
 
     public List<Loan> getLoans(int accountNumber) {
@@ -80,16 +80,39 @@ public class DataRepository {
     }
 
     public void createLoan(String userName, long amount, Date dueDate) {
-        String index = getIndex(userName);
 
         int customerAccountNumber = getAccount(userName).getAccountNumber();
         Loan newLoan = new Loan(getNewLoanNumber(), customerAccountNumber, amount, dueDate);
 
-        getLoansAtIndex(index).add(newLoan);
+        createLoanThreadSafe(userName, newLoan);
+
     }
 
-
     public void updateLoan(Customer customer, int loanNumber, Date newDueDate) {
+        updateLoanThreadSafe(customer, loanNumber, newDueDate);
+    }
+
+    private Customer getCustomer(int accountNumber) {
+        return this.accounts.values()
+                .stream()
+                .flatMap(accounts -> accounts
+                        .stream()
+                        .filter(x -> x.getAccountNumber() == accountNumber)
+                        .map(a -> a.getOwner()))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private void createLoanThreadSafe(String userName, Loan newLoan) {
+
+        String index = getIndex(userName);
+
+        lock(userName);
+        getLoansAtIndex(index).add(newLoan);
+        unlock(userName);
+    }
+
+    private void updateLoanThreadSafe(Customer customer, int loanNumber, Date newDueDate) {
         String index = getIndex(customer.getUserName());
 
         //TODO: check if stream modifies entity inside the collection....
@@ -101,36 +124,34 @@ public class DataRepository {
                 .setDueDate(newDueDate);
     }
 
-    private Customer getCustomer(int accountNumber)
-    {
-        return this.accounts.values()
-            .stream()
-            .flatMap(accounts -> accounts
-                    .stream()
-                    .filter(x -> x.getAccountNumber() == accountNumber)
-                    .map(a -> a.getOwner()))
-            .findFirst()
-            .orElse(null);
+    private void createAccountThreadSafe(Customer owner, Account newAccount) {
+        String index = getIndex(owner.getUserName());
+
+        lock(owner.getUserName());
+
+        getAccountsAtIndex(index).add(newAccount);
+
+        SessionService.getInstance().log().info(
+                String.format("Thread #%d CREATED account for %s", Thread.currentThread().getId(), owner.getFirstName())
+        );
+
+        unlock(owner.getUserName());
     }
 
-    private String getIndex(String userName){
+    private String getIndex(String userName) {
         return userName.toLowerCase().substring(0, 1);
     }
 
-    private List<Loan> getLoansAtIndex(String index)
-    {
-        if (this.loans.get(index) == null)
-        {
+    private List<Loan> getLoansAtIndex(String index) {
+        if (this.loans.get(index) == null) {
             this.loans.put(index, new ArrayList<>());
         }
 
         return this.loans.get(index);
     }
 
-    private List<Account> getAccountsAtIndex(String index)
-    {
-        if (this.accounts.get(index) == null)
-        {
+    private List<Account> getAccountsAtIndex(String index) {
+        if (this.accounts.get(index) == null) {
             this.accounts.put(index, new ArrayList<>());
         }
 
@@ -143,6 +164,35 @@ public class DataRepository {
 
     private int getNewLoanNumber() {
         return ++loanNumber;
+    }
+
+    private synchronized void lock(String userName) {
+
+        System.out.println(
+                String.format("Thread #%d LOCKS on value %s.", Thread.currentThread().getId(), userName)
+        );
+
+        if (locks == null) {
+            locks = new HashMap<>();
+        }
+
+        Lock userNameLock = locks.get(userName);
+        if (userNameLock == null) {
+            userNameLock = new ReentrantLock();
+            locks.put(userName, userNameLock);
+        }
+
+        userNameLock.tryLock();
+    }
+
+    private synchronized void unlock(String userName) {
+
+        System.out.println(
+                String.format("Thread #%d UNLOCKS value %s.", Thread.currentThread().getId(), userName)
+        );
+
+        Lock userNameLock = locks.get(userName);
+        userNameLock.unlock();
     }
 
 
@@ -182,7 +232,7 @@ public class DataRepository {
         }
 
         if (bank == Bank.Dominion) {
-            Customer max =new Customer(0, 0, "Max", "Tanquerel", "mt", bank, "max.tanquerel@gmail.com", "514.111.2222");
+            Customer max = new Customer(0, 0, "Max", "Tanquerel", "mt", bank, "max.tanquerel@gmail.com", "514.111.2222");
             createAccount(max);
 
             createLoan(justin.getUserName(), 1000, dueDate);
