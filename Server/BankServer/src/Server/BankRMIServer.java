@@ -7,7 +7,6 @@ import Data.CustomerInfo;
 import Data.Loan;
 import Data.ServerPorts;
 import Services.CustomerService;
-import Services.OpenAccountThread;
 import Services.SessionService;
 
 import javax.security.auth.login.FailedLoginException;
@@ -40,7 +39,9 @@ public class BankRMIServer implements ICustomerServer, IManagerServer {
 
             SessionService.getInstance().log().info(String.format("%s Server is up and running on port %d!", serverName, serverPort));
 
-            initialTesting();
+
+//            testInitial();
+            testOpeningMultipleAccounts();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -131,7 +132,7 @@ public class BankRMIServer implements ICustomerServer, IManagerServer {
         return new CustomerInfo[0];
     }
 
-    private static void initialTesting() {
+    private static void testInitial() {
         String unknownUsername = "dummy@dummy.com";
         Customer unknown = _customerService.getCustomer(unknownUsername);
         printCustomer(unknown, unknownUsername);
@@ -150,6 +151,82 @@ public class BankRMIServer implements ICustomerServer, IManagerServer {
 
         List<Loan> alexLoans = _customerService.getLoan(alex.getAccountNumber());
         printLoans(alexLoans, alex.getFirstName());
+    }
+
+    private static void testOpeningMultipleAccounts() {
+        System.out.println(String.format("Start of concurrent account creation"));
+
+        Bank bank = SessionService.getInstance().getBank();
+
+        String firstName = "Concurrent";
+        String lastName = "concu";
+        String email = "concurrent@thread.com";
+        String phone = "";
+        String password = "c";
+
+        int threadNumber = 1;
+//        Thread openAccountTask = new Thread(
+//                new OpenAccountThread(bank, firstName, lastName, emailAddress, phoneNumber,password));
+//        openAccountTask.start();
+
+
+        Thread openAccountTask1 = new Thread(
+                new Runnable(){
+
+                    @Override
+                    public void run() {
+                        _customerService.openAccount(bank, firstName + "1", lastName, email + "1", phone, password);
+                        System.out.println(String.format("thread #%d openned an account for %s1", Thread.currentThread().getId(),firstName));
+                    }
+                });
+
+
+        Thread openAccountTask2 = new Thread(
+                new Runnable(){
+
+                    @Override
+                    public void run() {
+                        _customerService.openAccount(bank, firstName + "2", lastName, email + "2", phone, password);
+                        System.out.println(String.format("thread #%d openned an account for %s2", Thread.currentThread().getId(),firstName));
+                    }
+                });
+        Thread openAccountTask3 = new Thread(
+                new Runnable(){
+
+                    @Override
+                    public void run() {
+                        _customerService.openAccount(bank, firstName + "3", lastName, email + "3", phone, password);
+                        System.out.println(String.format("thread #%d openned an account for %s3", Thread.currentThread().getId(),firstName));
+                    }
+                });
+
+        openAccountTask1.start();
+        openAccountTask2.start();
+        openAccountTask3.start();
+
+        System.out.println(String.format("End of concurrent account creation"));
+
+
+                //sync!!
+
+//        // pool of names that are being locked
+//        HashSet<String> pool = new HashSet<String>();
+//
+//        lock(name)
+//        synchronized(pool)
+//        while(pool.contains(name)) // already being locked
+//            pool.wait();           // wait for release
+//        pool.add(name);            // I lock it
+//
+//        unlock(name)
+//        synchronized(pool)
+//        pool.remove(name);
+//        pool.notifyAll();
+//
+
+
+//        int accountNumber = _customerService.openAccount(bank, firstName, lastName, emailAddress, phoneNumber, password);
+
     }
 
     private static void printCustomer(Customer customer, String username) {
