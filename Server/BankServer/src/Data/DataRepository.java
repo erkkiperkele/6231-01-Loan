@@ -1,10 +1,9 @@
 package Data;
 
+import Services.LockFactory;
 import Services.SessionService;
 
 import java.util.*;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 /**
@@ -18,8 +17,6 @@ public class DataRepository {
     private int accountNumber = 1;
     private int loanNumber = 1;
     private int customerNumber = 1;
-
-    private HashMap<String, Lock> locks;
 
 
     public DataRepository() {
@@ -41,27 +38,51 @@ public class DataRepository {
     public Account getAccount(String userName) {
         String index = getIndex(userName);
 
+
+//        List<Account> accounts = getAccountsAtIndex(index);
+//        Account foundAccount = null;
+//        for (Account account : accounts)
+//        {
+//            if (account.getOwner().getUserName().equalsIgnoreCase(userName))
+//            {
+//                return account;
+//            }
+//        }
+//
+//        return foundAccount;
+
+
+//        //Iterator is not concurrent safe
+//        //in case the list is being modified during iteration
+//        //it'll throw a concurrentException error. Therefore we read data from a copy.
+//        List<Account> accounts = new ArrayList<>(getAccountsAtIndex(index));
+//        return accounts
+//                .stream()
+//                .filter(a -> a.getOwner().getUserName().equalsIgnoreCase(userName))
+//                .findFirst()
+//                .orElse(null);
+
         return getAccountsAtIndex(index)
                 .stream()
                 .filter(a -> a.getOwner().getUserName().equalsIgnoreCase(userName))
                 .findFirst()
                 .orElse(null);
+//
+
     }
 
     public void createAccount(Customer owner) {
 
         if (getAccount(owner.getUserName()) != null) {
+            SessionService.getInstance().log().info(
+                    String.format("This Account already exists for %s", owner.getFirstName())
+            );
             return;
         }
 
-        //PATCH: bad pattern. To be corrected.
-        if (owner.getId() == 0) {
-            owner.setId(++customerNumber);
-        }
-        owner.setBank(SessionService.getInstance().getBank());
-        //END OF PATCH
+        setOwnerInfo(owner);    //PATCH: bad pattern.
 
-        Account newAccount = new Account(getNewAccountNumber(), owner);
+        Account newAccount = new Account(generateNewAccountNumber(), owner);
         owner.setAccountNumber(newAccount.getAccountNumber());
 
         createAccountThreadSafe(owner, newAccount);
@@ -82,7 +103,7 @@ public class DataRepository {
     public void createLoan(String userName, long amount, Date dueDate) {
 
         int customerAccountNumber = getAccount(userName).getAccountNumber();
-        Loan newLoan = new Loan(getNewLoanNumber(), customerAccountNumber, amount, dueDate);
+        Loan newLoan = new Loan(generateNewLoanNumber(), customerAccountNumber, amount, dueDate);
 
         createLoanThreadSafe(userName, newLoan);
 
@@ -107,9 +128,9 @@ public class DataRepository {
 
         String index = getIndex(userName);
 
-        lock(userName);
+        LockFactory.getInstance().lock(userName);
         getLoansAtIndex(index).add(newLoan);
-        unlock(userName);
+        LockFactory.getInstance().unlock(userName);
     }
 
     private void updateLoanThreadSafe(Customer customer, int loanNumber, Date newDueDate) {
@@ -126,16 +147,29 @@ public class DataRepository {
 
     private void createAccountThreadSafe(Customer owner, Account newAccount) {
         String index = getIndex(owner.getUserName());
+        try {
+            LockFactory.getInstance().lock(index);
 
-        lock(owner.getUserName());
+            //UNCOMMENT FOR CONCURRENT CREATION TESTING
+            //testConcurrentAccess(owner, "Concurrent1");
 
-        getAccountsAtIndex(index).add(newAccount);
+            if (getAccount(owner.getUserName()) != null) {
+                SessionService.getInstance().log().info(
+                        String.format(
+                                "[CONCURRENCY] THREAD #%d : Account already created by another thread on %s",
+                                Thread.currentThread().getId(),
+                                owner.getFirstName())
+                );
+            } else {
+                getAccountsAtIndex(index).add(newAccount);
 
-        SessionService.getInstance().log().info(
-                String.format("Thread #%d CREATED account for %s", Thread.currentThread().getId(), owner.getFirstName())
-        );
-
-        unlock(owner.getUserName());
+                SessionService.getInstance().log().info(
+                        String.format("Thread #%d CREATED account for %s", Thread.currentThread().getId(), owner.getFirstName())
+                );
+            }
+        } finally {
+            LockFactory.getInstance().unlock(index);
+        }
     }
 
     private String getIndex(String userName) {
@@ -158,43 +192,20 @@ public class DataRepository {
         return this.accounts.get(index);
     }
 
-    private int getNewAccountNumber() {
+    private void setOwnerInfo(Customer owner) {
+        if (owner.getId() == 0) {
+            owner.setId(++customerNumber);
+        }
+        owner.setBank(SessionService.getInstance().getBank());
+    }
+
+    private int generateNewAccountNumber() {
         return ++accountNumber;
     }
 
-    private int getNewLoanNumber() {
+    private int generateNewLoanNumber() {
         return ++loanNumber;
     }
-
-    private synchronized void lock(String userName) {
-
-        System.out.println(
-                String.format("Thread #%d LOCKS on value %s.", Thread.currentThread().getId(), userName)
-        );
-
-        if (locks == null) {
-            locks = new HashMap<>();
-        }
-
-        Lock userNameLock = locks.get(userName);
-        if (userNameLock == null) {
-            userNameLock = new ReentrantLock();
-            locks.put(userName, userNameLock);
-        }
-
-        userNameLock.tryLock();
-    }
-
-    private synchronized void unlock(String userName) {
-
-        System.out.println(
-                String.format("Thread #%d UNLOCKS value %s.", Thread.currentThread().getId(), userName)
-        );
-
-        Lock userNameLock = locks.get(userName);
-        userNameLock.unlock();
-    }
-
 
     /**
      * Some dummy data initialization
@@ -237,6 +248,29 @@ public class DataRepository {
 
             createLoan(justin.getUserName(), 1000, dueDate);
             createLoan(maria.getUserName(), 500, dueDate);
+        }
+    }
+
+    /**
+     * Use this test to test concurrent access
+     *
+     * @param owner
+     */
+    private void testConcurrentAccess(Customer owner, String ownerNameToProtect) {
+
+        try {
+            if (owner.getFirstName().equalsIgnoreCase(ownerNameToProtect)
+//                    && Thread.currentThread().getId() == 14
+                    ) {
+                System.err.println(
+                        String.format(
+                                "THREAD #%d : NO OTHER THREAD CAN CREATE ACCOUNT WHILE I SLEEP FOR %s"
+                                , Thread.currentThread().getId(), owner.getFirstName()
+                        ));
+                Thread.currentThread().sleep(3000);
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 }

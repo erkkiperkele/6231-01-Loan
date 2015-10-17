@@ -63,31 +63,6 @@ public class BankRMIServer implements ICustomerServer, IManagerServer {
     public int openAccount(Bank bank, String firstName, String lastName, String emailAddress, String phoneNumber, String password)
             throws RemoteException {
 
-        //TODO: Synchronize access!
-
-
-//        Thread openAccountTask = new Thread(
-//                new OpenAccountThread(bank, firstName, lastName, emailAddress, phoneNumber,password));
-//        openAccountTask.start();
-
-        //sync!!
-
-//        // pool of names that are being locked
-//        HashSet<String> pool = new HashSet<String>();
-//
-//        lock(name)
-//        synchronized(pool)
-//        while(pool.contains(name)) // already being locked
-//            pool.wait();           // wait for release
-//        pool.add(name);            // I lock it
-//
-//        unlock(name)
-//        synchronized(pool)
-//        pool.remove(name);
-//        pool.notifyAll();
-//
-
-
         int accountNumber = _customerService.openAccount(bank, firstName, lastName, emailAddress, phoneNumber, password);
 
         return accountNumber;
@@ -162,12 +137,6 @@ public class BankRMIServer implements ICustomerServer, IManagerServer {
         String phone = "";
         String password = "c";
 
-        int threadNumber = 1;
-//        Thread openAccountTask = new Thread(
-//                new OpenAccountThread(bank, firstName, lastName, emailAddress, phoneNumber,password));
-//        openAccountTask.start();
-
-
         Thread openAccountTask1 = new Thread(() ->
         {
             _customerService.openAccount(bank, firstName + "1", lastName, email + "1", phone, password);
@@ -216,6 +185,12 @@ public class BankRMIServer implements ICustomerServer, IManagerServer {
             System.out.println(String.format("thread #%d OPENED an account for %s8", Thread.currentThread().getId(), firstName));
         });
 
+        Thread openAccountCreatedByTask1 = new Thread(() ->
+        {
+            _customerService.openAccount(bank, firstName + "1", lastName, email + "1", phone, password);
+            System.out.println(String.format("thread #%d OPENED an account for %s1", Thread.currentThread().getId(), firstName));
+        });
+
         openAccountTask1.start();
         openAccountTask2.start();
         openAccountTask3.start();
@@ -224,30 +199,9 @@ public class BankRMIServer implements ICustomerServer, IManagerServer {
         openAccountTask6.start();
         openAccountTask7.start();
         openAccountTask8.start();
+        openAccountCreatedByTask1.start();
 
         System.out.println(String.format("End of concurrent account creation"));
-
-
-        //sync!!
-
-//        // pool of names that are being locked
-//        HashSet<String> pool = new HashSet<String>();
-//
-//        lock(name)
-//        synchronized(pool)
-//        while(pool.contains(name)) // already being locked
-//            pool.wait();           // wait for release
-//        pool.add(name);            // I lock it
-//
-//        unlock(name)
-//        synchronized(pool)
-//        pool.remove(name);
-//        pool.notifyAll();
-//
-
-
-//        int accountNumber = _customerService.openAccount(bank, firstName, lastName, emailAddress, phoneNumber, password);
-
     }
 
     private static void printCustomer(Customer customer, String username) {
