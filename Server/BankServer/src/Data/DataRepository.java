@@ -7,6 +7,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
+ * A thread safe repository serving as an in memory database
+ * For accounts and loans.
  */
 public class DataRepository {
 
@@ -38,37 +40,17 @@ public class DataRepository {
     public Account getAccount(String userName) {
         String index = getIndex(userName);
 
+        LockFactory.getInstance().readlock(userName);
 
-//        List<Account> accounts = getAccountsAtIndex(index);
-//        Account foundAccount = null;
-//        for (Account account : accounts)
-//        {
-//            if (account.getOwner().getUserName().equalsIgnoreCase(userName))
-//            {
-//                return account;
-//            }
-//        }
-//
-//        return foundAccount;
-
-
-//        //Iterator is not concurrent safe
-//        //in case the list is being modified during iteration
-//        //it'll throw a concurrentException error. Therefore we read data from a copy.
-//        List<Account> accounts = new ArrayList<>(getAccountsAtIndex(index));
-//        return accounts
-//                .stream()
-//                .filter(a -> a.getOwner().getUserName().equalsIgnoreCase(userName))
-//                .findFirst()
-//                .orElse(null);
-
-        return getAccountsAtIndex(index)
+        Account foundAccount = getAccountsAtIndex(index)
                 .stream()
                 .filter(a -> a.getOwner().getUserName().equalsIgnoreCase(userName))
                 .findFirst()
                 .orElse(null);
-//
 
+        LockFactory.getInstance().readUnlock(userName);
+
+        return foundAccount;
     }
 
     public void createAccount(Customer owner) {
@@ -128,9 +110,9 @@ public class DataRepository {
 
         String index = getIndex(userName);
 
-        LockFactory.getInstance().lock(userName);
+        LockFactory.getInstance().writeLock(userName);
         getLoansAtIndex(index).add(newLoan);
-        LockFactory.getInstance().unlock(userName);
+        LockFactory.getInstance().writeUnlock(userName);
     }
 
     private void updateLoanThreadSafe(Customer customer, int loanNumber, Date newDueDate) {
@@ -148,27 +130,19 @@ public class DataRepository {
     private void createAccountThreadSafe(Customer owner, Account newAccount) {
         String index = getIndex(owner.getUserName());
         try {
-            LockFactory.getInstance().lock(index);
+            List<Account> accounts = getAccountsAtIndex(index);
+            LockFactory.getInstance().writeLock(owner.getUserName());
 
             //UNCOMMENT FOR CONCURRENT CREATION TESTING
-            //testConcurrentAccess(owner, "Concurrent1");
+            testConcurrentAccess(owner, "Concurrent1");
 
-            if (getAccount(owner.getUserName()) != null) {
-                SessionService.getInstance().log().info(
-                        String.format(
-                                "[CONCURRENCY] THREAD #%d : Account already created by another thread on %s",
-                                Thread.currentThread().getId(),
-                                owner.getFirstName())
-                );
-            } else {
-                getAccountsAtIndex(index).add(newAccount);
+            accounts.add(newAccount);
 
-                SessionService.getInstance().log().info(
-                        String.format("Thread #%d CREATED account for %s", Thread.currentThread().getId(), owner.getFirstName())
-                );
-            }
+            SessionService.getInstance().log().info(
+                    String.format("Thread #%d CREATED account for %s", Thread.currentThread().getId(), owner.getFirstName())
+            );
         } finally {
-            LockFactory.getInstance().unlock(index);
+            LockFactory.getInstance().writeUnlock(owner.getUserName());
         }
     }
 

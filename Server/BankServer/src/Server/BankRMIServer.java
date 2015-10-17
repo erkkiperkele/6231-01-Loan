@@ -39,7 +39,6 @@ public class BankRMIServer implements ICustomerServer, IManagerServer {
 
             SessionService.getInstance().log().info(String.format("%s Server is up and running on port %d!", serverName, serverPort));
 
-
 //            testInitial();
             testOpeningMultipleAccounts();
 
@@ -187,6 +186,7 @@ public class BankRMIServer implements ICustomerServer, IManagerServer {
 
         Thread openAccountCreatedByTask1 = new Thread(() ->
         {
+            System.out.println(String.format("thread #%d STARTING an account for %s1", Thread.currentThread().getId(), firstName));
             _customerService.openAccount(bank, firstName + "1", lastName, email + "1", phone, password);
             System.out.println(String.format("thread #%d OPENED an account for %s1", Thread.currentThread().getId(), firstName));
         });

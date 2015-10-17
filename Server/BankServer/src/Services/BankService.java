@@ -25,7 +25,8 @@ public class BankService implements ICustomerService, IManagerService {
 
         repository.createAccount(newCustomer);
 
-        return repository.getAccount(newCustomer.getUserName()).getAccountNumber();
+        return 0;
+//        return repository.getAccount(newCustomer.getUserName()).getAccountNumber();
     }
 
     @Override

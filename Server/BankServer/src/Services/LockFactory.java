@@ -10,12 +10,20 @@ public class LockFactory implements Closeable {
 
     private final int DEFAULT_MAX_CONCURRENT_ACCESS = 1;
     private static LockFactory ourInstance = new LockFactory();
-    private HashMap<String, Semaphore> locks;
+
+    private HashMap<String, Integer> readCounts;
+
+    private HashMap<String, Semaphore> writeLocks;
+    private HashMap<String, Semaphore> readLocks;
+    private HashMap<String, Semaphore> readCountsMutex;
 
 
     private LockFactory() {
 
-        locks = new HashMap<>();
+        writeLocks = new HashMap<>();
+        readLocks = new HashMap<>();
+        readCountsMutex = new HashMap<>();
+        readCounts = new HashMap<>();
     }
 
     public static LockFactory getInstance() {
@@ -23,41 +31,132 @@ public class LockFactory implements Closeable {
         return ourInstance;
     }
 
-    public void lock(String valueToLockOn) {
+    public void readlock(String valueToLockOn) {
 
-        System.out.println(
-                String.format("Thread #%d LOCKS on value %s.", Thread.currentThread().getId(), valueToLockOn)
-        );
-
-        Semaphore userNameLock = locks.get(valueToLockOn);
-        if (userNameLock == null) {
-            userNameLock = new Semaphore(DEFAULT_MAX_CONCURRENT_ACCESS);
-            locks.put(valueToLockOn, userNameLock);
-        }
+        Semaphore writeLock = getLazyWriteLock(valueToLockOn);
+        Semaphore readLock = getLazyReadLock(valueToLockOn);
+        Semaphore readCount = getLazyReadCountLock(valueToLockOn);
 
         try {
-            userNameLock.acquire();
+            readLock.acquire();
+            readCount.acquire();
+            Integer oldCount = getCount(valueToLockOn);
+            Integer newCount = oldCount + 1;
+
+            if (newCount == 1) {
+                writeLock.acquire();
+            }
+
+            readCounts.replace(valueToLockOn, oldCount, newCount);
+
+        } catch (InterruptedException e) {
+        } finally {
+            readCount.release();
+            readLock.release();
+        }
+
+    }
+
+    public void readUnlock(String valueToUnlock) {
+
+        Semaphore writeLock = getLazyWriteLock(valueToUnlock);
+        Semaphore readLock = getLazyReadLock(valueToUnlock);
+        Semaphore readCount = getLazyReadCountLock(valueToUnlock);
+
+        try {
+            readCount.acquire();
+
+            Integer oldCount = readCounts.get(valueToUnlock);
+            Integer newCount = oldCount - 1;
+            readCounts.replace(valueToUnlock, oldCount, newCount);
+
+            if (newCount == 0) {
+                writeLock.release();
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        finally{
+            readCount.release();
+
+        }
+    }
+
+    public void writeLock(String valueToLockOn) {
+
+        System.out.println(
+                String.format("Thread #%d WRITE LOCKS on value %s.", Thread.currentThread().getId(), valueToLockOn)
+        );
+
+
+        Semaphore writeLock = getLazyWriteLock(valueToLockOn);
+        Semaphore readLock = getLazyReadLock(valueToLockOn);
+
+        try {
+            readLock.acquire();
+            writeLock.acquire();
         } catch (InterruptedException e) {
             System.err.println(
-                    String.format("Thread #%d COULD NOT LOCK on value %s.", Thread.currentThread().getId(), valueToLockOn)
+                    String.format("Thread #%d COULD NOT WRITE LOCK on value %s.", Thread.currentThread().getId(), valueToLockOn)
             );
         }
     }
 
-    public void unlock(String valueToUnlock) {
+    public void writeUnlock(String valueToUnlock) {
 
         System.out.println(
-                String.format("Thread #%d UNLOCKS value %s.", Thread.currentThread().getId(), valueToUnlock)
+                String.format("Thread #%d WRITE UNLOCKS value %s.", Thread.currentThread().getId(), valueToUnlock)
         );
 
-        Semaphore userNameLock = locks.get(valueToUnlock);
+        Semaphore writeLock = getLazyWriteLock(valueToUnlock);
+        Semaphore readLock = getLazyReadLock(valueToUnlock);
 
-        userNameLock.release();
+        writeLock.release();
+        readLock.release();
+    }
+
+    private Integer getCount(String index)
+    {
+        Integer count = readCounts.get(index);
+        if (count == null)
+        {
+            count =  0;
+            readCounts.put(index, count);
+        }
+        return count;
+    }
+
+    private synchronized Semaphore getLazyWriteLock(String valueToLockOn) {
+        Semaphore valueLock = writeLocks.get(valueToLockOn);
+        if (valueLock == null) {
+            valueLock = new Semaphore(1);
+            writeLocks.put(valueToLockOn, valueLock);
+        }
+        return writeLocks.get(valueToLockOn);
+    }
+
+    private synchronized Semaphore getLazyReadLock(String valueToLockOn) {
+        Semaphore readlock = readLocks.get(valueToLockOn);
+        if (readlock == null) {
+            readlock = new Semaphore(1);
+            readLocks.put(valueToLockOn, readlock);
+        }
+        return readLocks.get(valueToLockOn);
+    }
+
+    private synchronized Semaphore getLazyReadCountLock(String valueToLockOn) {
+        Semaphore mutex = readCountsMutex.get(valueToLockOn);
+        if (mutex == null) {
+            mutex = new Semaphore(1);
+            readCountsMutex.put(valueToLockOn, mutex);
+        }
+
+        return mutex;
     }
 
     @Override
     public void close() throws IOException {
-        locks
+        writeLocks
                 .values()
                 .forEach(l -> l.release());
     }
