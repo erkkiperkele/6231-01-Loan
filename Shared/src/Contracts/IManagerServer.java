@@ -1,6 +1,7 @@
 package Contracts;
 
 import Data.*;
+import Transport.RMI.RecordNotFoundException;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
@@ -13,7 +14,7 @@ import java.util.Date;
 public interface IManagerServer extends Remote {
 
     void delayPayment(Bank bank, int loanID, Date currentDueDate, Date newDueDate)
-            throws RemoteException;
+            throws RemoteException, RecordNotFoundException;
 
     CustomerInfo[] getCustomersInfo(Bank bank)
             throws RemoteException;

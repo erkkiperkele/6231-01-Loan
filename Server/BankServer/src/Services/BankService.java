@@ -3,6 +3,7 @@ package Services;
 import Contracts.ICustomerService;
 import Contracts.IManagerService;
 import Data.*;
+import Transport.RMI.RecordNotFoundException;
 import Transport.UDP.GetLoanMessage;
 import Transport.UDP.UDPClient;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
@@ -97,8 +98,9 @@ public class BankService implements ICustomerService, IManagerService {
     }
 
     @Override
-    public void delayPayment(int bankId, int loanID, Date currentDueDate, Date newDueDate) {
-        throw new NotImplementedException();
+    public void delayPayment(Bank bank, int loanId, Date currentDueDate, Date newDueDate) throws RecordNotFoundException {
+        //Note: in the context of this assignment, the current due date is not verified.
+        repository.updateLoan(loanId, newDueDate);
     }
 
     @Override

@@ -16,8 +16,6 @@ public class CustomerConsole {
 
     public static void main(String[] args) {
 
-        //TODO: ManagerClient!!
-
         _customerService = new CustomerService();
         _console = new Console(System.in);
 

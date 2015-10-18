@@ -1,6 +1,8 @@
 package Contracts;
 
+import Data.Bank;
 import Data.CustomerInfo;
+import Transport.RMI.RecordNotFoundException;
 
 import java.util.Date;
 
@@ -10,6 +12,6 @@ import java.util.Date;
  */
 public interface IManagerService {
 
-    void delayPayment(int bankId, int loanID, Date currentDueDate, Date newDueDate);
+    void delayPayment(Bank bank, int loanID, Date currentDueDate, Date newDueDate) throws RecordNotFoundException;
     CustomerInfo[] getCustomersInfo(int bankId);
 }

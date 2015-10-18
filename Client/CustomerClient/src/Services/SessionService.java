@@ -27,7 +27,6 @@ public class SessionService implements ISessionService {
     @Override
     public void setCurrentCustomer(Customer currentCustomer) {
         _currentCustomer = currentCustomer;
-        log().info(String.format("User %s just signed in.", currentCustomer.getFirstName()));
     }
 
     @Override

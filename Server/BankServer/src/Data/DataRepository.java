@@ -2,13 +2,18 @@ package Data;
 
 import Services.LockFactory;
 import Services.SessionService;
+import Transport.RMI.RecordNotFoundException;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
 /**
  * A thread safe repository serving as an in memory database
  * For accounts and loans.
+ * Some operations cost a lot because some of the interface contracts do not
+ * provide a userName when the data structure is optimised for a userName index.
  */
 public class DataRepository {
 
@@ -36,6 +41,7 @@ public class DataRepository {
                 ? null
                 : customerAccount.getOwner();
     }
+
     public Account getAccount(int accountNumber) {
         return this.accounts.values()
                 .stream()
@@ -61,8 +67,7 @@ public class DataRepository {
         return foundAccount;
     }
 
-    public Account getAccount(String firstName, String lastName)
-    {
+    public Account getAccount(String firstName, String lastName) {
         return accounts.values()
                 .stream()
                 .flatMap(x -> x.stream())
@@ -118,8 +123,41 @@ public class DataRepository {
         return newLoan;
     }
 
-    public void updateLoan(Customer customer, int loanNumber, Date newDueDate) {
-        updateLoanThreadSafe(customer, loanNumber, newDueDate);
+    public void updateLoan(int loanId, Date newDueDate) throws RecordNotFoundException {
+        Customer customer = getCustomerByLoanId(loanId);
+
+        if (customer != null) {
+            DateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+            updateLoanThreadSafe(customer, loanId, newDueDate);
+
+            SessionService.getInstance().log().info(
+                    String.format("Due date for loan #%d changed to %s",
+                            loanId,
+                            dateFormat.format(newDueDate))
+            );
+        } else {
+            SessionService.getInstance().log().info(
+                    String.format("No record found for loand #%d", loanId)
+            );
+            throw new RecordNotFoundException();
+        }
+    }
+
+    private Customer getCustomerByLoanId(int loanId) {
+        Customer customer = null;
+
+        int accountNumber = loans.values()
+                .stream()
+                .flatMap(l -> l.stream())
+                .filter(l -> l.getLoanNumber() == loanId)
+                .map(l -> l.getCustomerAccountNumber())
+                .findFirst()
+                .orElse(-1);
+
+        if (accountNumber > -1) {
+            customer = getCustomer(accountNumber);
+        }
+        return customer;
     }
 
     private Customer getCustomer(int accountNumber) {

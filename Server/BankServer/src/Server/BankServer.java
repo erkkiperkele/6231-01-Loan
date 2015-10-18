@@ -4,8 +4,8 @@ import Contracts.*;
 import Data.*;
 import Services.BankService;
 import Services.SessionService;
+import Transport.RMI.RecordNotFoundException;
 import Transport.UDP.UDPServer;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import javax.security.auth.login.FailedLoginException;
 import java.rmi.Remote;
@@ -21,8 +21,9 @@ public class BankServer implements ICustomerServer, IManagerServer {
     private static long CREDIT_LIMIT = 1500;
 
     private static int _serverPort;
-    private static ICustomerService _customerService;
-    private static IManagerService _managerService;
+    private static BankService bankService;
+//    private static ICustomerService _customerService;
+//    private static IManagerService _managerService;
 
     private static UDPServer udp;
 
@@ -48,8 +49,8 @@ public class BankServer implements ICustomerServer, IManagerServer {
     private static void initialize(String arg) {
         Bank serverName = Bank.fromInt(Integer.parseInt(arg));
         SessionService.getInstance().setBank(serverName);
-        _customerService = new BankService();
-        udp = new UDPServer(_customerService);
+        bankService = new BankService();
+        udp = new UDPServer(bankService);
     }
 
     private static void startRMIServer() {
@@ -91,7 +92,7 @@ public class BankServer implements ICustomerServer, IManagerServer {
     public int openAccount(Bank bank, String firstName, String lastName, String emailAddress, String phoneNumber, String password)
             throws RemoteException {
 
-        int accountNumber = _customerService.openAccount(bank, firstName, lastName, emailAddress, phoneNumber, password);
+        int accountNumber = bankService.openAccount(bank, firstName, lastName, emailAddress, phoneNumber, password);
 
         return accountNumber;
     }
@@ -100,7 +101,7 @@ public class BankServer implements ICustomerServer, IManagerServer {
     public Customer getCustomer(Bank bank, String email, String password)
             throws RemoteException, FailedLoginException {
 
-        Customer foundCustomer = _customerService.getCustomer(email);
+        Customer foundCustomer = bankService.getCustomer(email);
 
         if (!foundCustomer.getPassword().equals(password)) {
             throw new FailedLoginException(String.format("Wrong password for email %s", email));
@@ -118,14 +119,13 @@ public class BankServer implements ICustomerServer, IManagerServer {
     public Loan getLoan(Bank bank, int accountNumber, String password, long loanAmount)
             throws RemoteException, FailedLoginException {
 
-        Loan newLoan = _customerService.getLoan(bank, accountNumber, password, loanAmount);
+        Loan newLoan = bankService.getLoan(bank, accountNumber, password, loanAmount);
         return newLoan;
     }
 
     @Override
-    public void delayPayment(Bank bank, int loanID, Date currentDueDate, Date newDueDate) {
-        //TODO: Real implementation!
-        throw new NotImplementedException();
+    public void delayPayment(Bank bank, int loanID, Date currentDueDate, Date newDueDate) throws RecordNotFoundException {
+        bankService.delayPayment(bank, loanID, currentDueDate, newDueDate);
     }
 
     @Override
@@ -136,22 +136,22 @@ public class BankServer implements ICustomerServer, IManagerServer {
 
     private static void testInitial() {
         String unknownUsername = "dummy@dummy.com";
-        Customer unknown = _customerService.getCustomer(unknownUsername);
+        Customer unknown = bankService.getCustomer(unknownUsername);
         printCustomer(unknown, unknownUsername);
 
         String mariaUsername = "maria.etinger@gmail.com";
-        Customer maria = _customerService.getCustomer(mariaUsername);
+        Customer maria = bankService.getCustomer(mariaUsername);
         printCustomer(maria, mariaUsername);
 
         String justinUsername = "justin.paquette@gmail.com";
-        Customer justin = _customerService.getCustomer(justinUsername);
+        Customer justin = bankService.getCustomer(justinUsername);
         printCustomer(justin, justinUsername);
 
         String alexUserName = "alex.emond@gmail.com";
-        Customer alex = _customerService.getCustomer(alexUserName);
+        Customer alex = bankService.getCustomer(alexUserName);
         printCustomer(alex, alexUserName);
 
-        List<Loan> alexLoans = _customerService.getLoans(alex.getAccountNumber());
+        List<Loan> alexLoans = bankService.getLoans(alex.getAccountNumber());
         printLoans(alexLoans, alex.getFirstName());
     }
 
@@ -168,62 +168,62 @@ public class BankServer implements ICustomerServer, IManagerServer {
 
         Thread openAccountTask1 = new Thread(() ->
         {
-            _customerService.openAccount(bank, firstName + "1", lastName, email + "1", phone, password);
+            bankService.openAccount(bank, firstName + "1", lastName, email + "1", phone, password);
             System.out.println(String.format("thread #%d OPENED an account for %s1", Thread.currentThread().getId(), firstName));
         });
 
         Thread openAccountTask2 = new Thread(() ->
         {
-            _customerService.openAccount(bank, firstName + "2", lastName, email + "2", phone, password);
+            bankService.openAccount(bank, firstName + "2", lastName, email + "2", phone, password);
             System.out.println(String.format("thread #%d OPENED an account for %s2", Thread.currentThread().getId(), firstName));
         });
 
         Thread openAccountTask3 = new Thread(() ->
         {
-            _customerService.openAccount(bank, firstName + "3", lastName, email + "3", phone, password);
+            bankService.openAccount(bank, firstName + "3", lastName, email + "3", phone, password);
             System.out.println(String.format("thread #%d OPENED an account for %s3", Thread.currentThread().getId(), firstName));
         });
 
         Thread openAccountTask4 = new Thread(() ->
         {
-            _customerService.openAccount(bank, firstName + "4", lastName, email + "4", phone, password);
+            bankService.openAccount(bank, firstName + "4", lastName, email + "4", phone, password);
             System.out.println(String.format("thread #%d OPENED an account for %s4", Thread.currentThread().getId(), firstName));
         });
 
         Thread openAccountTask5 = new Thread(() ->
         {
-            _customerService.openAccount(bank, firstName + "5", lastName, email + "5", phone, password);
+            bankService.openAccount(bank, firstName + "5", lastName, email + "5", phone, password);
             System.out.println(String.format("thread #%d OPENED an account for %s5", Thread.currentThread().getId(), firstName));
         });
 
         Thread openAccountTask6 = new Thread(() ->
         {
-            _customerService.openAccount(bank, firstName + "6", lastName, email + "6", phone, password);
+            bankService.openAccount(bank, firstName + "6", lastName, email + "6", phone, password);
             System.out.println(String.format("thread #%d OPENED an account for %s6", Thread.currentThread().getId(), firstName));
         });
 
         Thread openAccountTask7 = new Thread(() ->
         {
-            _customerService.openAccount(bank, firstName + "7", lastName, email + "7", phone, password);
+            bankService.openAccount(bank, firstName + "7", lastName, email + "7", phone, password);
             System.out.println(String.format("thread #%d OPENED an account for %s7", Thread.currentThread().getId(), firstName));
         });
 
         Thread openAccountTask8 = new Thread(() ->
         {
-            _customerService.openAccount(bank, firstName + "8", lastName, email + "8", phone, password);
+            bankService.openAccount(bank, firstName + "8", lastName, email + "8", phone, password);
             System.out.println(String.format("thread #%d OPENED an account for %s8", Thread.currentThread().getId(), firstName));
         });
 
         Thread openAccountCreatedByTask1 = new Thread(() ->
         {
             System.out.println(String.format("thread #%d STARTING an account for %s1", Thread.currentThread().getId(), firstName));
-            _customerService.openAccount(bank, firstName + "1", lastName, email + "1", phone, password);
+            bankService.openAccount(bank, firstName + "1", lastName, email + "1", phone, password);
             System.out.println(String.format("thread #%d OPENED an account for %s1", Thread.currentThread().getId(), firstName));
         });
 
 //        Thread getAccount = new Thread(() ->
 //        {
-//            _customerService.getCustomer(email + "1");
+//            bankService.getCustomer(email + "1");
 //            System.out.println(String.format("thread #%d OPENED an account for %s1", Thread.currentThread().getId(), firstName));
 //        });
 
@@ -259,7 +259,7 @@ public class BankServer implements ICustomerServer, IManagerServer {
             }
 
             try {
-                _customerService.getLoan(bank, accountNumber, password, loanAmount);
+                bankService.getLoan(bank, accountNumber, password, loanAmount);
             } catch (FailedLoginException e) {
                 e.printStackTrace();
             }

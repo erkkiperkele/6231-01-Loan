@@ -29,7 +29,7 @@ public class FileLogger implements IFileLogger {
     }
 
     @Override
-    public void warning(String message) {
+    public void warn(String message) {
         write(" WARN: " + message);
     }
 
