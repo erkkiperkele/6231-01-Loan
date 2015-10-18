@@ -18,9 +18,6 @@ public class CustomerConsole {
 
         //TODO: ManagerClient!!
 
-        //QUESTIONS:
-        //- Does the client have to execute asynchronous requests?
-
         _customerService = new CustomerService();
         _console = new Console(System.in);
 
@@ -71,8 +68,14 @@ public class CustomerConsole {
         Customer customer = SessionService.getInstance().getCurrentCustomer();
         long loanAmount = askLoanAmount();
 
-        getLoan(customer.getBank(), customer.getAccountNumber(), customer.getPassword(), loanAmount);
         SessionService.getInstance().log().info(String.format("Requested a loan of %1$s $", loanAmount));
+        Loan newLoan = getLoan(customer.getBank(), customer.getAccountNumber(), customer.getPassword(), loanAmount);
+
+        if (newLoan != null && newLoan.getAmount() >0) {
+            SessionService.getInstance().log().info(
+                    String.format("New loan granted for an amount of %1$s $", newLoan.getAmount())
+            );
+        }
     }
 
     private static void displaySignin() {
@@ -198,9 +201,10 @@ public class CustomerConsole {
     private static long askLoanAmount() {
         _console.println("Enter required amount for the loan: ");
         String userAnswer = _console.readString();
+
         long answer = userAnswer.equals("")
                 ? 100
-                : Long.getLong(userAnswer);
+                : Long.parseLong(userAnswer);
 
         displayAnswer(String.valueOf(answer));
         return answer;

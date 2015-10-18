@@ -5,7 +5,7 @@ import Data.Bank;
 import Data.Customer;
 import Data.Loan;
 import Data.ServerPorts;
-import Server.BankRMIServer;
+import Server.BankServer;
 
 import javax.security.auth.login.FailedLoginException;
 import java.net.MalformedURLException;
@@ -24,7 +24,7 @@ public class CustomerRMIClient implements ICustomerServer {
         System.setProperty("java.security.policy",policyPath);
 
         int serverPort = ServerPorts.fromBankName(bank);
-        _server = new BankRMIServer(serverPort);        //QUESTION: How to remove this dependency to the server module?
+        _server = new BankServer(serverPort);        //QUESTION: How to remove this dependency to the server module?
 
         try {
             String serverUrl = String.format("rmi://localhost:%d/customer", ServerPorts.CustomerRMI.getPort());

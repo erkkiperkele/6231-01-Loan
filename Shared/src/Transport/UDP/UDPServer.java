@@ -78,15 +78,25 @@ public class UDPServer {
             GetLoanMessage loanMessage = (GetLoanMessage) loanMessageSerializer.deserialize(message);
 
             Account account = _customerService.getAccount(loanMessage.getFirstName(), loanMessage.getLastName());
-            List<Loan> loans = _customerService.getLoans(account.getAccountNumber());
 
-            currentLoanAmount = loans
-                    .stream()
-                    .mapToLong(l -> l.getAmount())
-                    .sum();
+            if(account != null) {
+                List<Loan> loans = _customerService.getLoans(account.getAccountNumber());
 
-            System.err.println(String.format("Loan amount %d", currentLoanAmount));
+                currentLoanAmount = loans
+                        .stream()
+                        .mapToLong(l -> l.getAmount())
+                        .sum();
 
+                System.err.println(String.format("Loan amount %d", currentLoanAmount));
+            }
+            else
+            {
+                SessionService.getInstance().log().info(
+                        String.format("%1$s %2$s doesn't have a credit record at our bank",
+                                loanMessage.getFirstName(),
+                                loanMessage.getLastName())
+                );
+            }
 
         } catch (ClassNotFoundException e) {
             e.printStackTrace();

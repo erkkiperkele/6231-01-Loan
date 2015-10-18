@@ -81,13 +81,18 @@ public class CustomerService implements ICustomerService {
     @Override
     public Loan getLoan(Bank bank, int accountNumber, String password, long loanAmount) {
 
+        Loan newLoan = null;
         try {
 
-            return _clients[bank.toInt() - 1].getLoan(bank, accountNumber, password, loanAmount);
+            newLoan = _clients[bank.toInt() - 1].getLoan(bank, accountNumber, password, loanAmount);
 
         } catch (RemoteException e) {
             e.printStackTrace();
             return null;
+        } catch (FailedLoginException e) {
+            SessionService.getInstance().log().error(e.getMessage());
+            e.printStackTrace();
         }
+        return newLoan;
     }
 }

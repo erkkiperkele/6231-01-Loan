@@ -16,7 +16,7 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.Date;
 import java.util.List;
 
-public class BankRMIServer implements ICustomerServer, IManagerServer {
+public class BankServer implements ICustomerServer, IManagerServer {
 
     private static long CREDIT_LIMIT = 1500;
 
@@ -26,43 +26,48 @@ public class BankRMIServer implements ICustomerServer, IManagerServer {
 
     private static UDPServer udp;
 
+    public BankServer(int serverPort) {
+        _serverPort = serverPort;
+    }
+
     public static void main(String[] args) {
 
-        //TODO: Logging!
+        String serverArg = args[0];
+        initialize(serverArg);
 
-        Bank serverName = Bank.fromInt(Integer.parseInt(args[0]));
-        int serverPort = ServerPorts.fromBankName(serverName);
+        //Starting bank server
+        startRMIServer();
+        startUDPServer();
+
+        //Server tests
+        testInitial();
+        testOpeningMultipleAccounts();
+        testUDPGetLoan();
+    }
+
+    private static void initialize(String arg) {
+        Bank serverName = Bank.fromInt(Integer.parseInt(arg));
         SessionService.getInstance().setBank(serverName);
         _customerService = new BankService();
         udp = new UDPServer(_customerService);
+    }
+
+    private static void startRMIServer() {
+
+        Bank bank = SessionService.getInstance().getBank();
+        int serverPort = ServerPorts.fromBankName(bank);
 
         try {
-            startRMIServer(serverPort);
-
-
-            SessionService.getInstance().log().info(String.format("%s Server is up and running on port %d!", serverName, serverPort));
-
-//            testInitial();
-//            testOpeningMultipleAccounts();
-
+            (new BankServer(serverPort)).exportServer();
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-
-        startUDPServer();
-        try {
-            if(serverName == Bank.Royal){
-                testUDPGetLoan();
-            }
-        } catch (FailedLoginException e) {
-            e.printStackTrace();
-        }
-
-    }
-
-    private static void startRMIServer(int serverPort) throws Exception {
-        (new BankRMIServer(serverPort)).exportServer();
+        SessionService.getInstance().log().info(
+                String.format("%s Server is up and running on port %d!",
+                        bank,
+                        serverPort)
+        );
     }
 
     private static void startUDPServer() {
@@ -71,11 +76,6 @@ public class BankRMIServer implements ICustomerServer, IManagerServer {
             udp.startServer();
         });
         startUdpServer.start();
-    }
-
-
-    public BankRMIServer(int serverPort) {
-        _serverPort = serverPort;
     }
 
     public void exportServer() throws Exception {
@@ -116,7 +116,8 @@ public class BankRMIServer implements ICustomerServer, IManagerServer {
     public Loan getLoan(Bank bank, int accountNumber, String password, long loanAmount)
             throws RemoteException, FailedLoginException {
 
-           return _customerService.getLoan(bank, accountNumber, password, loanAmount);
+        Loan newLoan = _customerService.getLoan(bank, accountNumber, password, loanAmount);
+        return newLoan;
     }
 
     @Override
@@ -237,22 +238,30 @@ public class BankRMIServer implements ICustomerServer, IManagerServer {
         System.out.println(String.format("End of concurrent account creation"));
     }
 
-    private static void testUDPGetLoan() throws FailedLoginException {
+    private static void testUDPGetLoan() {
 
-        Bank bank = Bank.Royal;
-        int accountNumber = 2;
-        String password = "aa";
-        long loanAmount = 200;
+        Bank bank = SessionService.getInstance().getBank();
+
+        if (bank == Bank.Royal) {
+
+            int accountNumber = 2;
+            String password = "aa";
+            long loanAmount = 200;
 
 
-        //Wait for all servers to start before sending a message.
-        try {
-            Thread.sleep(5000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            //Wait for all servers to start before sending a message.
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            try {
+                _customerService.getLoan(bank, accountNumber, password, loanAmount);
+            } catch (FailedLoginException e) {
+                e.printStackTrace();
+            }
         }
-
-        _customerService.getLoan(bank, accountNumber, password, loanAmount);
     }
 
     private static void printCustomer(Customer customer, String username) {
