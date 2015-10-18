@@ -6,9 +6,12 @@ public enum ServerPorts {
     ManagerRMI,
     UDP;
 
-    public int getPort(){
-        switch(this)
-        {
+    /**
+     * maps a port name to its actual local port.
+     * @return
+     */
+    public int getRMIPort() {
+        switch (this) {
             case CustomerRMI:
                 return 4242;
 
@@ -23,10 +26,13 @@ public enum ServerPorts {
         }
     }
 
-    public static int fromBankName(Bank bank)
-    {
-        switch(bank)
-        {
+    /**
+     * maps each bank to a local port.
+     * @param bank
+     * @return
+     */
+    public static int getRMIPort(Bank bank) {
+        switch (bank) {
             case Royal:
                 return 4242;
 
@@ -42,11 +48,13 @@ public enum ServerPorts {
     }
 
 
-
-    public static int getUDPPort(Bank bank)
-    {
-        switch(bank)
-        {
+    /**
+     * maps each bank to another local port for its UDP server.
+     * @param bank
+     * @return
+     */
+    public static int getUDPPort(Bank bank) {
+        switch (bank) {
             case Royal:
                 return 4245;
 
@@ -60,5 +68,4 @@ public enum ServerPorts {
                 return 0;
         }
     }
-
 }

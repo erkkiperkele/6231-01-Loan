@@ -4,20 +4,25 @@ import Contracts.ICustomerService;
 import Data.Bank;
 import Data.Customer;
 import Data.Loan;
+import Helpers.Console;
 import Services.CustomerService;
 import Services.SessionService;
 
 import javax.security.auth.login.FailedLoginException;
 
+/**
+ * A simple console project to provide a UI to customers
+ * in order to access the Banks API
+ */
 public class CustomerConsole {
 
-    private static ICustomerService _customerService;
-    private static Console _console;
+    private static ICustomerService customerService;
+    private static Console console;
 
     public static void main(String[] args) {
 
-        _customerService = new CustomerService();
-        _console = new Console(System.in);
+        customerService = new CustomerService();
+        console = new Console(System.in);
 
         boolean isExiting = false;
 
@@ -35,14 +40,14 @@ public class CustomerConsole {
                         + "%1$s 1: Open an account"
                         + "%1$s 2: Get Loan"
                         + "%1$s Press any other key to exit."
-                , _console.newLine());
+                , console.newLine());
 
-        _console.println(message);
+        console.println(message);
     }
 
     private static boolean executeChoice() {
 
-        char choice = _console.readChar();
+        char choice = console.readChar();
         boolean isExiting = false;
 
         switch (choice) {
@@ -53,7 +58,7 @@ public class CustomerConsole {
                 displayGetLoan();
                 break;
             default:
-                _console.println("See you!");
+                console.println("See you!");
                 isExiting = true;
                 break;
         }
@@ -69,7 +74,7 @@ public class CustomerConsole {
         SessionService.getInstance().log().info(String.format("Requested a loan of %1$s $", loanAmount));
         Loan newLoan = getLoan(customer.getBank(), customer.getAccountNumber(), customer.getPassword(), loanAmount);
 
-        if (newLoan != null && newLoan.getAmount() >0) {
+        if (newLoan != null && newLoan.getAmount() > 0) {
             SessionService.getInstance().log().info(
                     String.format("New loan granted for an amount of %1$s $", newLoan.getAmount())
             );
@@ -82,7 +87,7 @@ public class CustomerConsole {
         String password = askPassword();
 
         try {
-            Customer customer = _customerService.signIn(bank, email, password);
+            Customer customer = customerService.signIn(bank, email, password);
             SessionService.getInstance().setCurrentCustomer(customer);
             displayCurrentCustomerInfo();
 
@@ -97,10 +102,10 @@ public class CustomerConsole {
 
         Customer currentCustomer = SessionService.getInstance().getCurrentCustomer();
 
-        _console.println("Customer logged in as: " + _console.newLine());
-        _console.println(currentCustomer.getFirstName() + _console.newLine());
-        _console.println(currentCustomer.getLastName() + _console.newLine());
-        _console.println(currentCustomer.getBank().toString() + _console.newLine());
+        console.println("Customer logged in as: " + console.newLine());
+        console.println(currentCustomer.getFirstName() + console.newLine());
+        console.println(currentCustomer.getLastName() + console.newLine());
+        console.println(currentCustomer.getBank().toString() + console.newLine());
     }
 
 
@@ -119,7 +124,7 @@ public class CustomerConsole {
         SessionService.getInstance().log().info(String.format("Account #%d created.", accountNumber));
 
         try {
-            Customer newCustomer = _customerService.getCustomer(bank, email, password);
+            Customer newCustomer = customerService.getCustomer(bank, email, password);
             SessionService.getInstance().setCurrentCustomer(newCustomer);
         } catch (FailedLoginException e) {
             //Should not happen, account was created with this email.
@@ -128,9 +133,9 @@ public class CustomerConsole {
 
     private static Bank askBankId() {
 
-        _console.println("Enter bankId");
-        _console.println(String.format("(1 - %1$s, 2 - %2$s, 3 %3$s): ", Bank.Royal, Bank.National, Bank.Dominion));
-        int userAnswer = _console.readint();
+        console.println("Enter bankId");
+        console.println(String.format("(1 - %1$s, 2 - %2$s, 3 %3$s): ", Bank.Royal, Bank.National, Bank.Dominion));
+        int userAnswer = console.readint();
         Bank answer = userAnswer == 0
                 ? Bank.Royal
                 : Bank.fromInt(userAnswer);
@@ -141,8 +146,8 @@ public class CustomerConsole {
 
     private static String askFirstName() {
 
-        _console.println("Enter firstName: ");
-        String userAnswer = _console.readString();
+        console.println("Enter firstName: ");
+        String userAnswer = console.readString();
         String answer = userAnswer.equals("")
                 ? "Aymeric"
                 : userAnswer;
@@ -153,8 +158,8 @@ public class CustomerConsole {
 
     private static String askLastName() {
 
-        _console.println("Enter lastName: ");
-        String userAnswer = _console.readString();
+        console.println("Enter lastName: ");
+        String userAnswer = console.readString();
         String answer = userAnswer.equals("")
                 ? "Grail"
                 : userAnswer;
@@ -164,8 +169,8 @@ public class CustomerConsole {
     }
 
     private static String askEmail() {
-        _console.println("Enter email: ");
-        String userAnswer = _console.readString();
+        console.println("Enter email: ");
+        String userAnswer = console.readString();
         String answer = userAnswer.equals("")
                 ? "Aymeric.Grail@gmail.com"
                 : userAnswer;
@@ -175,8 +180,8 @@ public class CustomerConsole {
     }
 
     private static String askPhone() {
-        _console.println("Enter phone: ");
-        String userAnswer = _console.readString();
+        console.println("Enter phone: ");
+        String userAnswer = console.readString();
         String answer = userAnswer.equals("")
                 ? "514.660.2812"
                 : userAnswer;
@@ -186,8 +191,8 @@ public class CustomerConsole {
     }
 
     private static String askPassword() {
-        _console.println("Enter password: ");
-        String userAnswer = _console.readString();
+        console.println("Enter password: ");
+        String userAnswer = console.readString();
         String answer = userAnswer.equals("")
                 ? "zaza"
                 : userAnswer;
@@ -197,8 +202,8 @@ public class CustomerConsole {
     }
 
     private static long askLoanAmount() {
-        _console.println("Enter required amount for the loan: ");
-        String userAnswer = _console.readString();
+        console.println("Enter required amount for the loan: ");
+        String userAnswer = console.readString();
 
         long answer = userAnswer.equals("")
                 ? 100
@@ -216,7 +221,7 @@ public class CustomerConsole {
             String phone,
             String password) {
 
-        int accountNumber = _customerService.openAccount(bankId, firstName, lastName, email, phone, password);
+        int accountNumber = customerService.openAccount(bankId, firstName, lastName, email, phone, password);
         return accountNumber;
     }
 
@@ -225,10 +230,10 @@ public class CustomerConsole {
             int accountNumber,
             String password,
             long loanAmount) {
-        return _customerService.getLoan(bankId, accountNumber, password, loanAmount);
+        return customerService.getLoan(bankId, accountNumber, password, loanAmount);
     }
 
     private static void displayAnswer(String answer) {
-        _console.println("Value Entered: " + answer + _console.newLine());
+        console.println("Value Entered: " + answer + console.newLine());
     }
 }

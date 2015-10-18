@@ -1,7 +1,9 @@
 package Transport.RMI;
 
 import Contracts.IManagerServer;
-import Data.*;
+import Data.Bank;
+import Data.CustomerInfo;
+import Data.ServerPorts;
 import Server.BankServer;
 
 import javax.security.auth.login.FailedLoginException;
@@ -11,22 +13,24 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.Date;
 
-
+/**
+ * An implementation for the Manager server interface.
+ * (See interface documentation for details on functionality)
+ */
 public class ManagerRMIClient implements IManagerServer {
 
     private final String policyPath = "./LoanManagerSecurity.policy";
-    private IManagerServer _server;
+    private IManagerServer server;
 
-    public ManagerRMIClient(Bank bank)
-    {
-        System.setProperty("java.security.policy",policyPath);
+    public ManagerRMIClient(Bank bank) {
+        System.setProperty("java.security.policy", this.policyPath);
 
-        int serverPort = ServerPorts.fromBankName(bank);
-        _server = new BankServer(serverPort);
+        int serverPort = ServerPorts.getRMIPort(bank);
+        this.server = new BankServer(serverPort);
 
         try {
-            String serverUrl = String.format("rmi://localhost:%d/manager", ServerPorts.CustomerRMI.getPort());
-            _server = (IManagerServer) Naming.lookup(serverUrl);
+            String serverUrl = String.format("rmi://localhost:%d/manager", ServerPorts.CustomerRMI.getRMIPort());
+            this.server = (IManagerServer) Naming.lookup(serverUrl);
         } catch (MalformedURLException e) {
             e.printStackTrace();
         } catch (RemoteException e) {
@@ -39,12 +43,12 @@ public class ManagerRMIClient implements IManagerServer {
     @Override
     public void delayPayment(Bank bank, int loanId, Date currentDueDate, Date newDueDate) throws RemoteException, RecordNotFoundException {
 
-        _server.delayPayment(bank, loanId, currentDueDate, newDueDate);
+        this.server.delayPayment(bank, loanId, currentDueDate, newDueDate);
     }
 
     @Override
     public CustomerInfo[] getCustomersInfo(Bank bank) throws RemoteException, FailedLoginException {
-        return _server.getCustomersInfo(bank);
+        return this.server.getCustomersInfo(bank);
     }
 }
 

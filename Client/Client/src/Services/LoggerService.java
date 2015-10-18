@@ -9,18 +9,24 @@ import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 
+
+/**
+ * This service provides an implementation for the loggerService interface
+ * (see interface documentation)
+ */
 public class LoggerService implements ILoggerService, Closeable {
-    private Map<Integer, IFileLogger> _loggers;
-    private String _rootPath = "./Logs/";
+    private Map<Integer, IFileLogger> loggers;
+    private String rootPath = "./Logs/";
 
     public LoggerService() {
-        _loggers = new HashMap<>();
+
+        this.loggers = new HashMap<>();
     }
 
 
     @Override
     public void close() throws IOException {
-        for (IFileLogger logger : _loggers.values()) {
+        for (IFileLogger logger : this.loggers.values()) {
             logger.close();
         }
     }
@@ -33,7 +39,7 @@ public class LoggerService implements ILoggerService, Closeable {
 
     private IFileLogger getLazyLogger(Customer currentCustomer) {
 
-        IFileLogger logger = _loggers.get(currentCustomer.getId());
+        IFileLogger logger = this.loggers.get(currentCustomer.getId());
 
         if (logger == null) {
             logger = createCustomerLogger(currentCustomer);
@@ -43,19 +49,18 @@ public class LoggerService implements ILoggerService, Closeable {
 
     private IFileLogger createCustomerLogger(Customer currentCustomer) {
 
-        String path =
-                _rootPath
-                        + currentCustomer.getFirstName()
-                        + "_"
-                        + currentCustomer.getLastName()
-                        + "_"
-                        + currentCustomer.getBank()
-                        + ".txt";
+        String path = this.rootPath
+                + currentCustomer.getFirstName()
+                + "_"
+                + currentCustomer.getLastName()
+                + "_"
+                + currentCustomer.getBank()
+                + ".txt";
 
         createFile(path);
 
         IFileLogger logger = new FileLogger(path);
-        _loggers.put(currentCustomer.getId(), logger);
+        this.loggers.put(currentCustomer.getId(), logger);
 
         return logger;
     }

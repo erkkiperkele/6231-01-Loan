@@ -1,21 +1,25 @@
 package Transport.UDP;
 
-import java.io.*;
+import java.io.Closeable;
+import java.io.IOException;
 import java.net.*;
 
+/**
+ * Provides a UDP server.
+ */
 public class UDPClient implements Closeable {
 
-    private DatagramSocket _socket;
-    private InetAddress _host;
+    private DatagramSocket socket;
+    private InetAddress host;
     private static final int TIME_OUT = 20000;
 
 
     public UDPClient() {
 
         try {
-            _host = InetAddress.getByName("localhost");
-            _socket = new DatagramSocket();
-            _socket.setSoTimeout(TIME_OUT);
+            this.host = InetAddress.getByName("localhost");
+            this.socket = new DatagramSocket();
+            this.socket.setSoTimeout(TIME_OUT);
 
         } catch (SocketException e) {
             e.printStackTrace();
@@ -24,30 +28,35 @@ public class UDPClient implements Closeable {
         }
     }
 
+    /**
+     * Sends a request at the given port for a customer's credit line using a serialized GetLoanMessage()
+     * (the port should correspond to the desired bank's server)
+     * returns 0 if Customer has no account at the requested bank.
+     * @param message a serialized GetLoanMessage() Please use the serializer provided to ensure message is valid.
+     * @param serverPort the server port of the bank we want to retrieve the credit line from.
+     * @return a serialized long indicating what's the customer's credit line at the requested bank.
+     * @throws IOException
+     */
     public byte[] sendMessage(byte[] message, int serverPort) throws IOException {
 
+        DatagramPacket request = new DatagramPacket(message, message.length, this.host, serverPort);
+        this.socket.send(request);
 
-        DatagramPacket request = new DatagramPacket(message, message.length, _host, serverPort);
-        _socket.send(request);
-
-//        _socket.getPort()
-        System.err.println(String.format("UDP CLIENT is waiting answer on port: %d", _socket.getLocalPort()));
-
+        System.err.println(String.format("UDP CLIENT is waiting answer on port: %d", this.socket.getLocalPort()));
 
         byte[] buffer = new byte[1000];
         DatagramPacket reply = new DatagramPacket(buffer, buffer.length);
 
-        _socket.receive(reply);
-        System.err.println(String.format("UDP CLIENT RECEIVED ANSWER!"));
-
+        this.socket.receive(reply);
+        System.out.println(String.format("UDP CLIENT received answer!"));
 
         return reply.getData();
     }
 
     @Override
     public void close() throws IOException {
-            if (_socket != null) {
-                _socket.close();
-            }
+        if (this.socket != null) {
+            this.socket.close();
+        }
     }
 }

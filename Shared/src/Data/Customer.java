@@ -15,47 +15,61 @@ public class Customer implements Serializable {
     private String password;
 
     public String getEmail() {
+
         return email;
     }
 
     public String getUserName() {
+
         return email.toLowerCase();
     }
-
 
     private String email;
 
     public int getAccountNumber() {
 
-        return accountNumber;
+        return this.accountNumber;
     }
 
     public String getPassword() {
-        return password;
+
+        return this.password;
     }
 
     public int getId() {
-
-        return id;
+        return this.id;
     }
 
     public void setId(int id) {
+
         this.id = id;
     }
 
     public String getFirstName() {
 
-        return firstName;
+        return this.firstName;
     }
 
     public String getLastName() {
 
-        return lastName;
+        return this.lastName;
     }
 
     public Bank getBank() {
 
-        return bank;
+        return this.bank;
+    }
+
+    public String getPhone() {
+        return this.phone;
+    }
+
+    public void setAccountNumber(int accountNumber) {
+        this.accountNumber = accountNumber;
+    }
+
+    public void setBank(Bank bank) {
+        this.bank = bank;
     }
 
     public Customer(int id, int accountNumber, String firstName, String lastName, String password, Bank bank, String email, String phone) {
@@ -77,8 +91,7 @@ public class Customer implements Serializable {
         this.phone = phone;
     }
 
-    public String toString()
-    {
+    public String toString() {
         String displayInfo = "";
 
         displayInfo += (this.id + " - ");
@@ -89,13 +102,5 @@ public class Customer implements Serializable {
         displayInfo += (this.email);
 
         return displayInfo;
-    }
-
-    public void setAccountNumber(int accountNumber) {
-        this.accountNumber = accountNumber;
-    }
-
-    public void setBank(Bank bank) {
-        this.bank = bank;
     }
 }

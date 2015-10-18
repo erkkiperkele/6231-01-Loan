@@ -2,7 +2,7 @@ package Data;
 
 import java.io.Serializable;
 
-public class Account implements Serializable{
+public class Account implements Serializable {
 
     private int accountNumber;
     private Customer owner;
@@ -15,14 +15,14 @@ public class Account implements Serializable{
     }
 
     public Customer getOwner() {
-        return owner;
+        return this.owner;
     }
 
     public int getAccountNumber() {
-        return accountNumber;
+        return this.accountNumber;
     }
 
     public long getCreditLimit() {
-        return creditLimit;
+        return this.creditLimit;
     }
 }

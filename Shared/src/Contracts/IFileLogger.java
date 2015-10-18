@@ -7,6 +7,8 @@ import java.io.Closeable;
  */
 public interface IFileLogger extends Closeable {
     void info(String message);
+
     void warn(String message);
+
     void error(String message);
 }

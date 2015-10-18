@@ -10,19 +10,23 @@ import Transport.RMI.CustomerRMIClient;
 import javax.security.auth.login.FailedLoginException;
 import java.rmi.RemoteException;
 
+/**
+ * This service provides the customer console's functionality
+ * (see interface documentation)
+ */
 public class CustomerService implements ICustomerService {
 
-    private CustomerRMIClient[] _clients;
+    private CustomerRMIClient[] clients;
 
     public CustomerService() {
         initializeClients();
     }
 
     private void initializeClients() {
-        _clients = new CustomerRMIClient[3];
-        _clients[Bank.Royal.toInt() - 1] = new CustomerRMIClient(Bank.Royal);
-        _clients[Bank.National.toInt() - 1] = new CustomerRMIClient(Bank.National);
-        _clients[Bank.Dominion.toInt() - 1] = new CustomerRMIClient(Bank.Dominion);
+        this.clients = new CustomerRMIClient[3];
+        this.clients[Bank.Royal.toInt() - 1] = new CustomerRMIClient(Bank.Royal);
+        this.clients[Bank.National.toInt() - 1] = new CustomerRMIClient(Bank.National);
+        this.clients[Bank.Dominion.toInt() - 1] = new CustomerRMIClient(Bank.Dominion);
     }
 
     @Override
@@ -36,7 +40,7 @@ public class CustomerService implements ICustomerService {
 
         try {
 
-            CustomerRMIClient client = _clients[bank.toInt() - 1];
+            CustomerRMIClient client = this.clients[bank.toInt() - 1];
             int accountNumber = client.openAccount(bank, firstName, lastName, emailAddress, phoneNumber, password);
             return accountNumber;
 
@@ -52,7 +56,7 @@ public class CustomerService implements ICustomerService {
 
         try {
 
-            return _clients[bank.toInt() - 1].getCustomer(bank, email, password);
+            return this.clients[bank.toInt() - 1].getCustomer(bank, email, password);
 
         } catch (RemoteException e) {
             e.printStackTrace();
@@ -67,7 +71,7 @@ public class CustomerService implements ICustomerService {
     public Customer signIn(Bank bank, String email, String password) throws FailedLoginException {
         try {
 
-            return _clients[bank.toInt() - 1].signIn(bank, email, password);
+            return this.clients[bank.toInt() - 1].signIn(bank, email, password);
 
         } catch (RemoteException e) {
             e.printStackTrace();
@@ -84,7 +88,7 @@ public class CustomerService implements ICustomerService {
         Loan newLoan = null;
         try {
 
-            newLoan = _clients[bank.toInt() - 1].getLoan(bank, accountNumber, password, loanAmount);
+            newLoan = this.clients[bank.toInt() - 1].getLoan(bank, accountNumber, password, loanAmount);
 
         } catch (RemoteException e) {
             e.printStackTrace();

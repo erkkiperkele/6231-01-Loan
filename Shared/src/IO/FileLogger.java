@@ -2,17 +2,23 @@ package IO;
 
 import Contracts.IFileLogger;
 
-import java.io.*;
-import java.util.*;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Date;
 
+/**
+ * A simple implementation for a file logger.
+ * It's responsibility is to format a log request depending on its category (info, warn, ...)
+ */
 public class FileLogger implements IFileLogger {
 
-    private FileOutputStream _logger;
+    private FileOutputStream logger;
 
     public FileLogger(String path) {
 
         try {
-            _logger = new FileOutputStream(path, true);
+            this.logger = new FileOutputStream(path, true);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
@@ -20,7 +26,7 @@ public class FileLogger implements IFileLogger {
 
     @Override
     public void close() throws IOException {
-        _logger.close();
+        this.logger.close();
     }
 
     @Override
@@ -43,7 +49,7 @@ public class FileLogger implements IFileLogger {
         String outputMessage = new Date() + message + "\n";
 
         try {
-            _logger.write(outputMessage.getBytes());
+            this.logger.write(outputMessage.getBytes());
             System.out.println(outputMessage.trim());
         } catch (IOException e) {
             e.printStackTrace();

@@ -13,22 +13,24 @@ import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 
-
+/**
+ * An implementation for the Customer server interface.
+ * (See interface documentation for details on functionality)
+ */
 public class CustomerRMIClient implements ICustomerServer {
 
     private final String policyPath = "./LoanManagerSecurity.policy";
-    private ICustomerServer _server;
+    private ICustomerServer server;
 
-    public CustomerRMIClient(Bank bank)
-    {
-        System.setProperty("java.security.policy",policyPath);
+    public CustomerRMIClient(Bank bank) {
+        System.setProperty("java.security.policy", this.policyPath);
 
-        int serverPort = ServerPorts.fromBankName(bank);
-        _server = new BankServer(serverPort);        //QUESTION: How to remove this dependency to the server module?
+        int serverPort = ServerPorts.getRMIPort(bank);
+        this.server = new BankServer(serverPort);        //QUESTION: How to remove this dependency to the server module?
 
         try {
-            String serverUrl = String.format("rmi://localhost:%d/customer", ServerPorts.CustomerRMI.getPort());
-            _server = (ICustomerServer) Naming.lookup(serverUrl);
+            String serverUrl = String.format("rmi://localhost:%d/customer", ServerPorts.CustomerRMI.getRMIPort());
+            this.server = (ICustomerServer) Naming.lookup(serverUrl);
         } catch (MalformedURLException e) {
             e.printStackTrace();
         } catch (RemoteException e) {
@@ -41,24 +43,24 @@ public class CustomerRMIClient implements ICustomerServer {
     @Override
     public int openAccount(Bank bankId, String firstName, String lastName, String emailAddress, String phoneNumber, String password)
             throws RemoteException {
-        int accountNumber = _server.openAccount(bankId, firstName, lastName, emailAddress, phoneNumber, password);
+        int accountNumber = this.server.openAccount(bankId, firstName, lastName, emailAddress, phoneNumber, password);
         return accountNumber;
     }
 
     @Override
     public Customer getCustomer(Bank bank, String email, String password) throws RemoteException, FailedLoginException {
-        return _server.getCustomer(bank, email, password);
+        return this.server.getCustomer(bank, email, password);
     }
 
     @Override
     public Customer signIn(Bank bank, String email, String password) throws RemoteException, FailedLoginException {
-        return _server.signIn(bank, email, password);
+        return this.server.signIn(bank, email, password);
     }
 
     @Override
     public Loan getLoan(Bank bank, int accountNumber, String password, long loanAmount)
             throws RemoteException, FailedLoginException {
-        return _server.getLoan(bank, accountNumber, password, loanAmount);
+        return this.server.getLoan(bank, accountNumber, password, loanAmount);
     }
 }
 

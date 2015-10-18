@@ -2,27 +2,22 @@ package Services;
 
 import Contracts.IFileLogger;
 import Contracts.ILoggerService;
-import Data.Customer;
 import IO.FileLogger;
 
 import java.io.*;
-import java.util.HashMap;
-import java.util.Map;
 
 public class LoggerService implements ILoggerService, Closeable {
     //    private Map<Integer, IFileLogger> _loggers;
     private IFileLogger logger;
-    private final String _rootPath = "./LogsServer/";
+    private final String rootPath = "./LogsServer/";
 
     public LoggerService() {
-
-//        _loggers = new HashMap<>();
     }
 
 
     @Override
     public void close() throws IOException {
-        logger.close();
+        this.logger.close();
     }
 
     @Override
@@ -43,10 +38,9 @@ public class LoggerService implements ILoggerService, Closeable {
     private IFileLogger createLogger() {
 
         String serverName = SessionService.getInstance().getBank().name();
-        String path =
-                _rootPath
-                        + serverName
-                        + ".txt";
+        String path = this.rootPath
+                + serverName
+                + ".txt";
 
         createFile(path);
 

@@ -12,12 +12,20 @@ import Data.Customer;
  */
 public class SessionService implements ISessionService {
     private static SessionService ourInstance = new SessionService();
-    private static Customer _currentCustomer;
-    private static ILoggerService _loggerService;
+    private static Customer currentCustomer;
+    private static ILoggerService loggerService;
 
     private SessionService() {
-        _loggerService = new LoggerService();
-        _currentCustomer = new Customer(0, 0, "Default", "Customer", "none", Bank.None, "default.customer@default.com", "514.111.2222");
+        this.loggerService = new LoggerService();
+        this.currentCustomer = new Customer(
+                0,
+                0,
+                "Default",
+                "Customer",
+                "none",
+                Bank.None,
+                "default.customer@default.com",
+                "514.111.2222");
     }
 
     public static SessionService getInstance() {
@@ -26,16 +34,16 @@ public class SessionService implements ISessionService {
 
     @Override
     public void setCurrentCustomer(Customer currentCustomer) {
-        _currentCustomer = currentCustomer;
+        SessionService.currentCustomer = currentCustomer;
     }
 
     @Override
     public Customer getCurrentCustomer() {
-        return _currentCustomer;
+        return this.currentCustomer;
     }
 
     @Override
     public IFileLogger log() {
-        return _loggerService.getLogger();
+        return this.loggerService.getLogger();
     }
 }

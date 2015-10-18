@@ -1,6 +1,6 @@
 package Data;
 
-import java.io.*;
+import java.io.Serializable;
 import java.util.Date;
 
 public class Loan implements Serializable {
@@ -18,27 +18,26 @@ public class Loan implements Serializable {
     }
 
     public int getLoanNumber() {
-        return loanNumber;
+        return this.loanNumber;
     }
 
     public int getCustomerAccountNumber() {
-        return customerAccountNumber;
+        return this.customerAccountNumber;
     }
 
     public long getAmount() {
-        return amount;
+        return this.amount;
     }
 
     public Date getDueDate() {
-        return dueDate;
+        return this.dueDate;
     }
 
     public void setDueDate(Date dueDate) {
         this.dueDate = dueDate;
     }
 
-    public String toString()
-    {
+    public String toString() {
         String displayInfo = "";
 
         displayInfo += (this.loanNumber + " - ");

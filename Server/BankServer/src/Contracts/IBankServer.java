@@ -7,7 +7,9 @@ package Contracts;
 public interface IBankServer {
 
     int getId();
+
     String getName();
+
     String getAddress();
 
 

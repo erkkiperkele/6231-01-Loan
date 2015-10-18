@@ -13,10 +13,11 @@ import java.net.SocketException;
 import java.util.List;
 
 public class UDPServer {
-    private static ICustomerService _customerService;
+    private ICustomerService customerService;
 
     public UDPServer(ICustomerService customerService) {
-        _customerService = customerService;
+
+        this.customerService = customerService;
     }
 
     public void startServer() {
@@ -38,7 +39,7 @@ public class UDPServer {
                 DatagramPacket request = new DatagramPacket(buffer, buffer.length);
                 aSocket.receive(request);
 
-                System.err.println(String.format("UDP Server received Message"));
+                System.out.println(String.format("UDP Server received Message"));
 
                 byte[] message = request.getData();
                 byte[] answer = processMessage(message);
@@ -52,7 +53,7 @@ public class UDPServer {
                 );
                 aSocket.send(reply);
 
-                System.err.println(String.format("UDP Server Answered Message on port: %d", answerPort));
+                System.out.println(String.format("UDP Server Answered Message on port: %d", answerPort));
             }
         } catch (SocketException e) {
             System.out.println("Socket: " + e.getMessage());
@@ -67,7 +68,15 @@ public class UDPServer {
 
     }
 
-    private static byte[] processMessage(byte[] message) throws IOException {
+    /**
+     * Upon reception of a GetLoanMessage() the udp server will calculate the current
+     * Credit line of the mentioned customer and return it to the sender of the request.
+     * returns 0 if Customer has no account at the requested bank.
+     * @param message a serialized GetLoanMessage() Please use the serializer provided to ensure message is valid.
+     * @return a serialized long indicating the current credit line at this bank for the given customer.
+     * @throws IOException
+     */
+    private byte[] processMessage(byte[] message) throws IOException {
 
         long currentLoanAmount = 0;
         Serializer loanMessageSerializer = new Serializer<GetLoanMessage>();
@@ -77,20 +86,18 @@ public class UDPServer {
 
             GetLoanMessage loanMessage = (GetLoanMessage) loanMessageSerializer.deserialize(message);
 
-            Account account = _customerService.getAccount(loanMessage.getFirstName(), loanMessage.getLastName());
+            Account account = this.customerService.getAccount(loanMessage.getFirstName(), loanMessage.getLastName());
 
-            if(account != null) {
-                List<Loan> loans = _customerService.getLoans(account.getAccountNumber());
+            if (account != null) {
+                List<Loan> loans = this.customerService.getLoans(account.getAccountNumber());
 
                 currentLoanAmount = loans
                         .stream()
                         .mapToLong(l -> l.getAmount())
                         .sum();
 
-                System.err.println(String.format("Loan amount %d", currentLoanAmount));
-            }
-            else
-            {
+                System.out.println(String.format("Loan amount %d", currentLoanAmount));
+            } else {
                 SessionService.getInstance().log().info(
                         String.format("%1$s %2$s doesn't have a credit record at our bank",
                                 loanMessage.getFirstName(),

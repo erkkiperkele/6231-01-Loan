@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 /**
  * A thread safe repository serving as an in memory database
  * For accounts and loans.
- * Some operations cost a lot because some of the interface contracts do not
+ * Note: currently some operations cost more processing because some of the interface contracts do not
  * provide a userName when the data structure is optimised for a userName index.
  */
 public class DataRepository {
@@ -34,6 +34,11 @@ public class DataRepository {
         generateInitialData();
     }
 
+    /**
+     * retrieves a Customer's information for a given userName.
+     * @param userName
+     * @return
+     */
     public Customer getCustomer(String userName) {
         Account customerAccount = getAccount(userName);
 
@@ -42,6 +47,11 @@ public class DataRepository {
                 : customerAccount.getOwner();
     }
 
+    /**
+     * retrives a Customer's account information for a given account number.
+     * @param accountNumber
+     * @return
+     */
     public Account getAccount(int accountNumber) {
         return this.accounts.values()
                 .stream()
@@ -51,6 +61,11 @@ public class DataRepository {
                 .orElse(null);
     }
 
+    /**
+     * retrieve a Customer's account information for a given userName.
+     * @param userName
+     * @return
+     */
     public Account getAccount(String userName) {
         String index = getIndex(userName);
 
@@ -67,8 +82,14 @@ public class DataRepository {
         return foundAccount;
     }
 
+    /**
+     * retrieves a customer's account information for a given first name and last name.
+     * @param firstName
+     * @param lastName
+     * @return
+     */
     public Account getAccount(String firstName, String lastName) {
-        return accounts.values()
+        return this.accounts.values()
                 .stream()
                 .flatMap(x -> x.stream())
                 .filter(a -> a.getOwner().getFirstName().equalsIgnoreCase(firstName))
@@ -77,6 +98,11 @@ public class DataRepository {
                 .orElse(null);
     }
 
+    /**
+     * Creates a new account for the given user with a given credit limit.
+     * @param owner
+     * @param creditLimit
+     */
     public void createAccount(Customer owner, long creditLimit) {
 
         if (getAccount(owner.getUserName()) != null) {
@@ -94,6 +120,11 @@ public class DataRepository {
         createAccountThreadSafe(owner, newAccount);
     }
 
+    /**
+     * retrieves all the loans attached to a given account Number at the current bank.
+     * @param accountNumber
+     * @return
+     */
     public List<Loan> getLoans(int accountNumber) {
 
         Customer customer = getCustomer(accountNumber);
@@ -113,6 +144,14 @@ public class DataRepository {
         return loans;
     }
 
+    /**
+     * Creates a new loan at the current bank.
+     * No validation is performed at this layer.
+     * @param userName
+     * @param amount
+     * @param dueDate
+     * @return
+     */
     public Loan createLoan(String userName, long amount, Date dueDate) {
 
         String index = getIndex(userName);
@@ -123,6 +162,13 @@ public class DataRepository {
         return newLoan;
     }
 
+    /**
+     * Modifies a given loan's due date.
+     * No validation is performed at this layer
+     * @param loanId
+     * @param newDueDate
+     * @throws RecordNotFoundException
+     */
     public void updateLoan(int loanId, Date newDueDate) throws RecordNotFoundException {
         Customer customer = getCustomerByLoanId(loanId);
 
@@ -143,21 +189,24 @@ public class DataRepository {
         }
     }
 
+    /**
+     * Retrieves all of the customer's information at this bank.
+     * @return
+     */
     public CustomerInfo[] getCustomersInfo() {
 
-        CustomerInfo[] customersInfo = accounts.values()
+        CustomerInfo[] customersInfo = this.accounts.values()
                 .stream()
                 .flatMap(a -> a.stream())
                 .map(a -> new CustomerInfo(a, getLoans(a.getAccountNumber())))
-                .toArray(size -> new CustomerInfo[size])
-                ;
+                .toArray(size -> new CustomerInfo[size]);
         return customersInfo;
     }
 
     private Customer getCustomerByLoanId(int loanId) {
         Customer customer = null;
 
-        int accountNumber = loans.values()
+        int accountNumber = this.loans.values()
                 .stream()
                 .flatMap(l -> l.stream())
                 .filter(l -> l.getLoanNumber() == loanId)
@@ -188,12 +237,11 @@ public class DataRepository {
 
         LockFactory.getInstance().writeLock(userName);
 
-        //TODO: check if stream modifies entity inside the collection....
         getLoansAtIndex(index)
                 .stream()
                 .filter(l -> l.getLoanNumber() == loanNumber)
                 .findFirst()
-                .orElse(null)      //TODO: dangerous, if loan doesn't exist, you end up with a null ref.
+                .orElse(null)
                 .setDueDate(newDueDate);
 
         LockFactory.getInstance().writeUnlock(userName);
@@ -240,17 +288,17 @@ public class DataRepository {
 
     private void setOwnerInfo(Customer owner) {
         if (owner.getId() == 0) {
-            owner.setId(++customerNumber);
+            owner.setId(++this.customerNumber);
         }
         owner.setBank(SessionService.getInstance().getBank());
     }
 
     private int generateNewAccountNumber() {
-        return ++accountNumber;
+        return ++this.accountNumber;
     }
 
     private int generateNewLoanNumber() {
-        return ++loanNumber;
+        return ++this.loanNumber;
     }
 
     /**
@@ -299,15 +347,12 @@ public class DataRepository {
     }
 
     /**
-     * Use this test to test concurrent access
-     *
-     * @param owner
+     * Use this method to test concurrent access
      */
     private void testConcurrentAccess(Customer owner, String ownerNameToProtect) {
 
         try {
             if (owner.getFirstName().equalsIgnoreCase(ownerNameToProtect)
-//                    && Thread.currentThread().getId() == 14
                     ) {
                 System.err.println(
                         String.format(

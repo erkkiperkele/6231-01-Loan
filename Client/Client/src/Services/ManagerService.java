@@ -13,28 +13,32 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+
+/**
+ * This service provides the manager console's functionality
+ * (see interface documentation)
+ */
 public class ManagerService implements IManagerService {
 
 
-    private ManagerRMIClient[] _clients;
+    private ManagerRMIClient[] clients;
 
     public ManagerService() {
         initializeClients();
     }
 
     private void initializeClients() {
-        _clients = new ManagerRMIClient[3];
-        _clients[Bank.Royal.toInt() - 1] = new ManagerRMIClient(Bank.Royal);
-        _clients[Bank.National.toInt() - 1] = new ManagerRMIClient(Bank.National);
-        _clients[Bank.Dominion.toInt() - 1] = new ManagerRMIClient(Bank.Dominion);
+        this.clients = new ManagerRMIClient[3];
+        this.clients[Bank.Royal.toInt() - 1] = new ManagerRMIClient(Bank.Royal);
+        this.clients[Bank.National.toInt() - 1] = new ManagerRMIClient(Bank.National);
+        this.clients[Bank.Dominion.toInt() - 1] = new ManagerRMIClient(Bank.Dominion);
     }
 
     @Override
     public Customer signIn(Bank bank, String username, String password) throws FailedLoginException {
 
         //Manager Sign in not implemented on server side in the context of this assignment
-        if (username.equalsIgnoreCase("manager") && password.equals("manager"))
-        {
+        if (username.equalsIgnoreCase("manager") && password.equals("manager")) {
             Customer currentManager = new Customer(0, 0, "Manager", "ByDefault", "manager", bank, username, "");
             SessionService.getInstance().log().info(
                     String.format("Manager just signed in as : %1$s %2$s at bank %3$s",
@@ -43,8 +47,7 @@ public class ManagerService implements IManagerService {
                             currentManager.getBank().toString()
                     ));
             return currentManager;
-        }
-        else{
+        } else {
             SessionService.getInstance().log().warn(
                     String.format("Manager failed to log in with userName: %1$s at bank: %2$s",
                             username,
@@ -58,7 +61,7 @@ public class ManagerService implements IManagerService {
     public void delayPayment(Bank bank, int loanId, Date currentDueDate, Date newDueDate) {
 
         try {
-            _clients[bank.toInt() - 1].delayPayment(bank, loanId, currentDueDate, newDueDate);
+            this.clients[bank.toInt() - 1].delayPayment(bank, loanId, currentDueDate, newDueDate);
 
             DateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
             SessionService.getInstance().log().info(
@@ -81,7 +84,7 @@ public class ManagerService implements IManagerService {
     public CustomerInfo[] getCustomersInfo(Bank bank) {
         CustomerInfo[] infos = null;
         try {
-           infos = _clients[bank.toInt() - 1].getCustomersInfo(bank);
+            infos = this.clients[bank.toInt() - 1].getCustomersInfo(bank);
         } catch (RemoteException e) {
             e.printStackTrace();
         } catch (FailedLoginException e) {

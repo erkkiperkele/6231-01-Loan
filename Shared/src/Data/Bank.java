@@ -6,9 +6,13 @@ public enum Bank {
     Dominion,
     None;
 
-    public static Bank fromInt(int bankId){
-        switch(bankId)
-        {
+    /**
+     * maps an integer to each bank name.
+     * @param bankId
+     * @return
+     */
+    public static Bank fromInt(int bankId) {
+        switch (bankId) {
             case 1:
                 return Royal;
 
@@ -23,9 +27,12 @@ public enum Bank {
         }
     }
 
-    public int toInt(){
-        switch(this)
-        {
+    /**
+     * maps a bank name to an integer.
+     * @return
+     */
+    public int toInt() {
+        switch (this) {
             case Royal:
                 return 1;
 

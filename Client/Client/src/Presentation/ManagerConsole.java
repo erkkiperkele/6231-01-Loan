@@ -4,6 +4,7 @@ import Contracts.IManagerService;
 import Data.Bank;
 import Data.Customer;
 import Data.CustomerInfo;
+import Helpers.Console;
 import Services.ManagerService;
 import Services.SessionService;
 
@@ -13,6 +14,11 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+
+/**
+ * A simple console project to provide a UI to managers
+ * in order to access the Banks API
+ */
 public class ManagerConsole {
 
     private static final String DATE_FORMAT = "dd-MM-yyyy";
@@ -83,8 +89,7 @@ public class ManagerConsole {
 
         CustomerInfo[] customersInfo = managerService.getCustomersInfo(bank);
 
-        for (CustomerInfo info : customersInfo)
-        {
+        for (CustomerInfo info : customersInfo) {
             System.out.println(info.toString());
         }
 

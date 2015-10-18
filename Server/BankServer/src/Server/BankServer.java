@@ -1,6 +1,7 @@
 package Server;
 
-import Contracts.*;
+import Contracts.ICustomerServer;
+import Contracts.IManagerServer;
 import Data.*;
 import Services.BankService;
 import Services.SessionService;
@@ -16,21 +17,27 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * This class starts both RMI and UDP servers for a given bank.
+ * It also contains basic tests for data access (concurrency, UDP protocols...)
+ */
 public class BankServer implements ICustomerServer, IManagerServer {
 
-    private static long CREDIT_LIMIT = 1500;
-
-    private static int _serverPort;
+    private static int serverPort;
     private static BankService bankService;
-//    private static ICustomerService _customerService;
-//    private static IManagerService _managerService;
 
     private static UDPServer udp;
 
     public BankServer(int serverPort) {
-        _serverPort = serverPort;
+        this.serverPort = serverPort;
     }
 
+    /**
+     * Instatiates and starts the RMI and UDP servers.
+     * ATTENTION: needs a single integer argument which is the bank Id for the server
+     * See the Bank enum to know what integer corresponds to what bank.
+     * @param args a single integer defining what bank this server belongs to.
+     */
     public static void main(String[] args) {
 
         String serverArg = args[0];
@@ -56,7 +63,7 @@ public class BankServer implements ICustomerServer, IManagerServer {
     private static void startRMIServer() {
 
         Bank bank = SessionService.getInstance().getBank();
-        int serverPort = ServerPorts.fromBankName(bank);
+        int serverPort = ServerPorts.getRMIPort(bank);
 
         try {
             (new BankServer(serverPort)).exportServer();
@@ -79,14 +86,19 @@ public class BankServer implements ICustomerServer, IManagerServer {
         startUdpServer.start();
     }
 
+    /**
+     * Exports both the customer and manager RMI servers.
+     * Actually both are the same server, but 2 endpoints
+     * (so that customers and managers can't access each others API)
+     * @throws Exception
+     */
     public void exportServer() throws Exception {
-        Remote obj = UnicastRemoteObject.exportObject(this, _serverPort);
-        Registry r = LocateRegistry.createRegistry(_serverPort);
+        Remote obj = UnicastRemoteObject.exportObject(this, serverPort);
+        Registry r = LocateRegistry.createRegistry(serverPort);
 
         r.bind("customer", obj);    //Access for customer console
         r.bind("manager", obj);    //Access for manager console
     }
-
 
     @Override
     public int openAccount(Bank bank, String firstName, String lastName, String emailAddress, String phoneNumber, String password)
