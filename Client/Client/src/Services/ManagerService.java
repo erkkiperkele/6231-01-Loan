@@ -40,6 +40,7 @@ public class ManagerService implements IManagerService {
         //Manager Sign in not implemented on server side in the context of this assignment
         if (username.equalsIgnoreCase("manager") && password.equals("manager")) {
             Customer currentManager = new Customer(0, 0, "Manager", "ByDefault", "manager", bank, username, "");
+            SessionService.getInstance().setCurrentCustomer(currentManager);
             SessionService.getInstance().log().info(
                     String.format("Manager just signed in as : %1$s %2$s at bank %3$s",
                             currentManager.getFirstName(),

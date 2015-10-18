@@ -79,6 +79,11 @@ public class CustomerConsole {
                     String.format("New loan granted for an amount of %1$s $", newLoan.getAmount())
             );
         }
+        else{
+            SessionService.getInstance().log().warn(
+                    String.format("New loan refused for an amount of %1$s $ (check your credit line)", loanAmount)
+            );
+        }
     }
 
     private static void displaySignin() {
@@ -89,7 +94,6 @@ public class CustomerConsole {
         try {
             Customer customer = customerService.signIn(bank, email, password);
             SessionService.getInstance().setCurrentCustomer(customer);
-            displayCurrentCustomerInfo();
 
         } catch (FailedLoginException e) {
             SessionService.getInstance().log().error("Wrong email or password, please try again.");
@@ -97,17 +101,6 @@ public class CustomerConsole {
         }
 
     }
-
-    private static void displayCurrentCustomerInfo() {
-
-        Customer currentCustomer = SessionService.getInstance().getCurrentCustomer();
-
-        console.println("Customer logged in as: " + console.newLine());
-        console.println(currentCustomer.getFirstName() + console.newLine());
-        console.println(currentCustomer.getLastName() + console.newLine());
-        console.println(currentCustomer.getBank().toString() + console.newLine());
-    }
-
 
     private static void displayOpenAccount() {
 

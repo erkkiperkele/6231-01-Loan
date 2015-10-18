@@ -36,6 +36,7 @@ public class DataRepository {
 
     /**
      * retrieves a Customer's information for a given userName.
+     *
      * @param userName
      * @return
      */
@@ -49,6 +50,7 @@ public class DataRepository {
 
     /**
      * retrives a Customer's account information for a given account number.
+     *
      * @param accountNumber
      * @return
      */
@@ -63,27 +65,34 @@ public class DataRepository {
 
     /**
      * retrieve a Customer's account information for a given userName.
+     *
      * @param userName
      * @return
      */
     public Account getAccount(String userName) {
         String index = getIndex(userName);
+        Account foundAccount = null;
 
-//        LockFactory.getInstance().readlock(userName);
+        try{
 
-        Account foundAccount = getAccountsAtIndex(index)
+        LockFactory.getInstance().readlock(userName);
+
+        foundAccount = getAccountsAtIndex(index)
                 .stream()
                 .filter(a -> a.getOwner().getUserName().equalsIgnoreCase(userName))
                 .findFirst()
                 .orElse(null);
 
-//        LockFactory.getInstance().readUnlock(userName);
+        } finally {
+            LockFactory.getInstance().readUnlock(userName);
+        }
 
         return foundAccount;
     }
 
     /**
      * retrieves a customer's account information for a given first name and last name.
+     *
      * @param firstName
      * @param lastName
      * @return
@@ -100,6 +109,7 @@ public class DataRepository {
 
     /**
      * Creates a new account for the given user with a given credit limit.
+     *
      * @param owner
      * @param creditLimit
      */
@@ -118,10 +128,17 @@ public class DataRepository {
         owner.setAccountNumber(newAccount.getAccountNumber());
 
         createAccountThreadSafe(owner, newAccount);
+
+        SessionService.getInstance().log().info(
+                String.format("new account created for %s (account #%d)",
+                        owner.getFirstName(),
+                        newAccount.getAccountNumber()
+                ));
     }
 
     /**
      * retrieves all the loans attached to a given account Number at the current bank.
+     *
      * @param accountNumber
      * @return
      */
@@ -131,15 +148,18 @@ public class DataRepository {
         String userName = customer.getUserName();
 
         String index = getIndex(customer.getUserName().toLowerCase());
+        List<Loan> loans = null;
 
-//        LockFactory.getInstance().readlock(userName);
+        try {
+            LockFactory.getInstance().readlock(userName);
 
-        List<Loan> loans = getLoansAtIndex(index)
-                .stream()
-                .filter(l -> l.getCustomerAccountNumber() == customer.getAccountNumber())
-                .collect(Collectors.toList());
-
-//        LockFactory.getInstance().readUnlock(userName);
+            loans = getLoansAtIndex(index)
+                    .stream()
+                    .filter(l -> l.getCustomerAccountNumber() == customer.getAccountNumber())
+                    .collect(Collectors.toList());
+        } finally {
+            LockFactory.getInstance().readUnlock(userName);
+        }
 
         return loans;
     }
@@ -147,6 +167,7 @@ public class DataRepository {
     /**
      * Creates a new loan at the current bank.
      * No validation is performed at this layer.
+     *
      * @param userName
      * @param amount
      * @param dueDate
@@ -158,13 +179,20 @@ public class DataRepository {
         int customerAccountNumber = getAccount(userName).getAccountNumber();
 
         Loan newLoan = new Loan(generateNewLoanNumber(), customerAccountNumber, amount, dueDate);
-        getLoansAtIndex(index).add(newLoan);
+
+        try {
+            LockFactory.getInstance().writeLock(userName);
+            getLoansAtIndex(index).add(newLoan);
+        } finally {
+            LockFactory.getInstance().writeUnlock(userName);
+        }
         return newLoan;
     }
 
     /**
      * Modifies a given loan's due date.
      * No validation is performed at this layer
+     *
      * @param loanId
      * @param newDueDate
      * @throws RecordNotFoundException
@@ -191,10 +219,10 @@ public class DataRepository {
 
     /**
      * Retrieves all of the customer's information at this bank.
+     *
      * @return
      */
     public CustomerInfo[] getCustomersInfo() {
-
         CustomerInfo[] customersInfo = this.accounts.values()
                 .stream()
                 .flatMap(a -> a.stream())
@@ -235,16 +263,19 @@ public class DataRepository {
         String index = getIndex(customer.getUserName());
         String userName = customer.getUserName();
 
-        LockFactory.getInstance().writeLock(userName);
+        try {
 
-        getLoansAtIndex(index)
-                .stream()
-                .filter(l -> l.getLoanNumber() == loanNumber)
-                .findFirst()
-                .orElse(null)
-                .setDueDate(newDueDate);
+            LockFactory.getInstance().writeLock(userName);
 
-        LockFactory.getInstance().writeUnlock(userName);
+            getLoansAtIndex(index)
+                    .stream()
+                    .filter(l -> l.getLoanNumber() == loanNumber)
+                    .findFirst()
+                    .orElse(null)
+                    .setDueDate(newDueDate);
+        } finally {
+            LockFactory.getInstance().writeUnlock(userName);
+        }
     }
 
     private void createAccountThreadSafe(Customer owner, Account newAccount) {

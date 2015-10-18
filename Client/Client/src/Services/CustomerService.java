@@ -71,8 +71,14 @@ public class CustomerService implements ICustomerService {
     public Customer signIn(Bank bank, String email, String password) throws FailedLoginException {
         try {
 
-            return this.clients[bank.toInt() - 1].signIn(bank, email, password);
-
+            Customer foundCustomer = this.clients[bank.toInt() - 1].signIn(bank, email, password);
+            SessionService.getInstance().log().info(
+                    String.format("Customer just signed in as : %1$s %2$s at bank %3$s",
+                            foundCustomer.getFirstName(),
+                            foundCustomer.getLastName(),
+                            foundCustomer.getBank().toString()
+                    ));
+            return foundCustomer;
         } catch (RemoteException e) {
             e.printStackTrace();
             return null;

@@ -36,4 +36,6 @@ public interface IManagerServer extends Remote {
      */
     CustomerInfo[] getCustomersInfo(Bank bank)
             throws RemoteException, FailedLoginException;
+
+
 }

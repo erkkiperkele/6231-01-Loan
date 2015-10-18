@@ -38,6 +38,7 @@ public class BankService implements ICustomerService, IManagerService {
         this.repository.createAccount(newCustomer, DEFAULT_CREDIT_LIMIT);
 
         return this.repository.getAccount(newCustomer.getUserName()).getAccountNumber();
+        //log inside the repository to manage errors.
     }
 
     @Override
@@ -49,48 +50,74 @@ public class BankService implements ICustomerService, IManagerService {
     @Override
     public List<Loan> getLoans(int accountNumber) {
 
-        return this.repository.getLoans(accountNumber);
+        List<Loan> loans = this.repository.getLoans(accountNumber);
+
+        if (loans.size() < 0) {
+            SessionService.getInstance().log().info(
+                    String.format("%1$d loans have been retrieved for account %2$d",
+                            loans.size(),
+                            accountNumber)
+            );
+        }
+
+        return loans;
     }
 
     @Override
     public Loan getLoan(Bank bank, int accountNumber, String password, long loanAmount) throws FailedLoginException {
 
+        Loan newLoan = null;
         Account account = this.repository.getAccount(accountNumber);
         Customer customer = account.getOwner();
         String userName = account.getOwner().getUserName();
 
         if (!customer.getPassword().equals(password)) {
+
+            SessionService.getInstance().log().warn(
+                    String.format("%s failed to log in when trying to get a new loan",
+                            customer.getFirstName())
+            );
             throw new FailedLoginException(String.format("Wrong password for account %d", accountNumber));
         }
 
-        LockFactory.getInstance().writeLock(userName);
+        try {
 
-        long internalLoansAmount = this.repository.getLoans(accountNumber)
-                .stream()
-                .mapToLong(l -> l.getAmount())
-                .sum();
+            LockFactory.getInstance().writeLock(userName);
+
+            long internalLoansAmount = this.repository.getLoans(accountNumber)
+                    .stream()
+                    .mapToLong(l -> l.getAmount())
+                    .sum();
 
 
-        long externalLoansAmount = getExternalLoans(customer.getFirstName(), customer.getLastName());
+            long externalLoansAmount = getExternalLoans(customer.getFirstName(), customer.getLastName());
 
-        long currentCredit = externalLoansAmount + internalLoansAmount;
+            long currentCredit = externalLoansAmount + internalLoansAmount;
 
-        Loan newLoan = null;
-        if (currentCredit + loanAmount < account.getCreditLimit()) {
-            Calendar calendar = Calendar.getInstance();
-            calendar.add(calendar.MONTH, 6);
-            Date dueDate = calendar.getTime();
+            if (currentCredit + loanAmount < account.getCreditLimit()) {
+                Calendar calendar = Calendar.getInstance();
+                calendar.add(calendar.MONTH, 6);
+                Date dueDate = calendar.getTime();
 
-            newLoan = this.repository.createLoan(userName, loanAmount, dueDate);
-            SessionService.getInstance().log().info(
-                    String.format("new Loan accepted for %s (%d$), current credit: %d$",
-                            customer.getFirstName(),
-                            newLoan.getAmount(),
-                            loanAmount + currentCredit)
-            );
+                newLoan = this.repository.createLoan(userName, loanAmount, dueDate);
+                SessionService.getInstance().log().info(
+                        String.format("new Loan accepted for %s (%d$), current credit: %d$",
+                                customer.getFirstName(),
+                                newLoan.getAmount(),
+                                loanAmount + currentCredit)
+                );
+            } else {
+                SessionService.getInstance().log().info(
+                        String.format("new Loan refuse for %s (%d$), current credit: %d$",
+                                customer.getFirstName(),
+                                loanAmount,
+                                currentCredit)
+                );
+            }
+        } finally {
+            LockFactory.getInstance().writeUnlock(userName);
         }
 
-        LockFactory.getInstance().writeUnlock(userName);
         return newLoan;
     }
 
@@ -105,6 +132,7 @@ public class BankService implements ICustomerService, IManagerService {
 
         //Note: in the context of this assignment, the current due date is not verified.
         this.repository.updateLoan(loanId, newDueDate);
+        //Log inside the repository.
     }
 
     @Override
@@ -117,8 +145,13 @@ public class BankService implements ICustomerService, IManagerService {
             );
             return customersInfo;
         } else {
+            SessionService.getInstance().log().info(
+                    String.format("Wrong bank: Info requested for bank: %1$s at bank server: %2$s",
+                            bank,
+                            SessionService.getInstance().getBank()
+                    ));
             throw new FailedLoginException(
-                    String.format("Wring bank: Info requested for bank: %1$s at bank server: %2$s",
+                    String.format("Wrong bank: Info requested for bank: %1$s at bank server: %2$s",
                             bank,
                             SessionService.getInstance().getBank()
                     ));

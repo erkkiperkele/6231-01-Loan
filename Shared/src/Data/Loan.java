@@ -1,6 +1,8 @@
 package Data;
 
 import java.io.Serializable;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class Loan implements Serializable {
@@ -38,12 +40,13 @@ public class Loan implements Serializable {
     }
 
     public String toString() {
+        DateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
         String displayInfo = "";
 
         displayInfo += (this.loanNumber + " - ");
         displayInfo += (this.customerAccountNumber + " - ");
         displayInfo += (this.amount + " - ");
-        displayInfo += (this.dueDate + " - ");
+        displayInfo += (dateFormat.format(this.dueDate));
 
         return displayInfo;
     }
