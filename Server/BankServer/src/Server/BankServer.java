@@ -129,9 +129,8 @@ public class BankServer implements ICustomerServer, IManagerServer {
     }
 
     @Override
-    public CustomerInfo[] getCustomersInfo(Bank bank) {
-        //TODO: Real implementation!
-        return new CustomerInfo[0];
+    public CustomerInfo[] getCustomersInfo(Bank bank) throws FailedLoginException {
+        return bankService.getCustomersInfo(bank);
     }
 
     private static void testInitial() {

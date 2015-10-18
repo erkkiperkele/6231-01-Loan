@@ -84,6 +84,8 @@ public class ManagerService implements IManagerService {
            infos = _clients[bank.toInt() - 1].getCustomersInfo(bank);
         } catch (RemoteException e) {
             e.printStackTrace();
+        } catch (FailedLoginException e) {
+            e.printStackTrace();
         }
         return infos;
     }

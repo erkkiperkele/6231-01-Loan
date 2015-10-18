@@ -4,6 +4,7 @@ import Contracts.IManagerServer;
 import Data.*;
 import Server.BankServer;
 
+import javax.security.auth.login.FailedLoginException;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
@@ -42,7 +43,7 @@ public class ManagerRMIClient implements IManagerServer {
     }
 
     @Override
-    public CustomerInfo[] getCustomersInfo(Bank bank) throws RemoteException {
+    public CustomerInfo[] getCustomersInfo(Bank bank) throws RemoteException, FailedLoginException {
         return _server.getCustomersInfo(bank);
     }
 }

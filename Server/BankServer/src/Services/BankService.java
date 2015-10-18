@@ -98,17 +98,32 @@ public class BankService implements ICustomerService, IManagerService {
     }
 
     @Override
-    public void delayPayment(Bank bank, int loanId, Date currentDueDate, Date newDueDate) throws RecordNotFoundException {
+    public void delayPayment(Bank bank, int loanId, Date currentDueDate, Date newDueDate)
+            throws RecordNotFoundException {
         //Note: in the context of this assignment, the current due date is not verified.
         repository.updateLoan(loanId, newDueDate);
     }
 
     @Override
-    public CustomerInfo[] getCustomersInfo(int bankId) {
-        throw new NotImplementedException();
+    public CustomerInfo[] getCustomersInfo(Bank bank) throws FailedLoginException {
+        if (bank == SessionService.getInstance().getBank())
+        {
+            CustomerInfo[] customersInfo = repository.getCustomersInfo();
+
+            SessionService.getInstance().log().info(
+                    String.format("Server returned %d customers info", customersInfo.length)
+            );
+            return customersInfo;
+        }
+        else{
+            throw new FailedLoginException(
+                    String.format("Wring bank: Info requested for bank: %1$s at bank server: %2$s",
+                            bank,
+                            SessionService.getInstance().getBank()
+                    ));
+        }
     }
 
-    //TODO: change for a List of Loan (serialization deserialization)
     private long getExternalLoans(String firstName, String lastName) {
         Bank currentBank = SessionService.getInstance().getBank();
 

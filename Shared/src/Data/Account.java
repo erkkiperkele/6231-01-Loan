@@ -1,6 +1,8 @@
 package Data;
 
-public class Account {
+import java.io.Serializable;
+
+public class Account implements Serializable{
 
     private int accountNumber;
     private Customer owner;

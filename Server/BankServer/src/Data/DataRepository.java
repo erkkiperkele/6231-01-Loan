@@ -143,6 +143,17 @@ public class DataRepository {
         }
     }
 
+    public CustomerInfo[] getCustomersInfo() {
+
+        CustomerInfo[] customersInfo = accounts.values()
+                .stream()
+                .flatMap(a -> a.stream())
+                .map(a -> new CustomerInfo(a, getLoans(a.getAccountNumber())))
+                .toArray(size -> new CustomerInfo[size])
+                ;
+        return customersInfo;
+    }
+
     private Customer getCustomerByLoanId(int loanId) {
         Customer customer = null;
 
