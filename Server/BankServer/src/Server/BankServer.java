@@ -81,7 +81,9 @@ public class BankServer implements ICustomerServer, IManagerServer {
     public void exportServer() throws Exception {
         Remote obj = UnicastRemoteObject.exportObject(this, _serverPort);
         Registry r = LocateRegistry.createRegistry(_serverPort);
-        r.bind("customer", obj);
+
+        r.bind("customer", obj);    //Access for customer console
+        r.bind("manager", obj);    //Access for manager console
     }
 
 
