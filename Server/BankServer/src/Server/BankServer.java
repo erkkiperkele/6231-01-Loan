@@ -14,6 +14,9 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
@@ -36,6 +39,7 @@ public class BankServer implements ICustomerServer, IManagerServer {
      * Instatiates and starts the RMI and UDP servers.
      * ATTENTION: needs a single integer argument which is the bank Id for the server
      * See the Bank enum to know what integer corresponds to what bank.
+     *
      * @param args a single integer defining what bank this server belongs to.
      */
     public static void main(String[] args) {
@@ -51,6 +55,8 @@ public class BankServer implements ICustomerServer, IManagerServer {
         testInitial();
         testOpeningMultipleAccounts();
         testUDPGetLoan();
+        testPrintCustomersInfo();
+        testDelayPayment();
     }
 
     private static void initialize(String arg) {
@@ -90,6 +96,7 @@ public class BankServer implements ICustomerServer, IManagerServer {
      * Exports both the customer and manager RMI servers.
      * Actually both are the same server, but 2 endpoints
      * (so that customers and managers can't access each others API)
+     *
      * @throws Exception
      */
     public void exportServer() throws Exception {
@@ -115,6 +122,9 @@ public class BankServer implements ICustomerServer, IManagerServer {
 
         Customer foundCustomer = bankService.getCustomer(email);
 
+        if (foundCustomer == null) {
+            throw new FailedLoginException(String.format("Customer doesn't exist for email: %s", email));
+        }
         if (!foundCustomer.getPassword().equals(password)) {
             throw new FailedLoginException(String.format("Wrong password for email %s", email));
         }
@@ -274,6 +284,34 @@ public class BankServer implements ICustomerServer, IManagerServer {
             } catch (FailedLoginException e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    private static void testPrintCustomersInfo() {
+        Bank bank = SessionService.getInstance().getBank();
+        try {
+            CustomerInfo[] customersInfo = bankService.getCustomersInfo(bank);
+            for (CustomerInfo info : customersInfo) {
+                System.out.println(info.toString());
+            }
+        } catch (FailedLoginException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void testDelayPayment() {
+        Bank bank = SessionService.getInstance().getBank();
+        DateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+
+        try {
+            Date currentDate = dateFormat.parse("02-03-2016");
+            Date newDueDate = dateFormat.parse("18-12-2016");
+            bankService.delayPayment(bank, 2, currentDate, newDueDate);
+
+        } catch (ParseException e) {
+            e.printStackTrace();
+        } catch (RecordNotFoundException e) {
+            e.printStackTrace();
         }
     }
 
