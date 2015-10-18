@@ -36,11 +36,19 @@ public class DataRepository {
                 ? null
                 : customerAccount.getOwner();
     }
+    public Account getAccount(int accountNumber) {
+        return this.accounts.values()
+                .stream()
+                .flatMap(a -> a.stream())
+                .filter(a -> a.getAccountNumber() == accountNumber)
+                .findFirst()
+                .orElse(null);
+    }
 
     public Account getAccount(String userName) {
         String index = getIndex(userName);
 
-        LockFactory.getInstance().readlock(userName);
+//        LockFactory.getInstance().readlock(userName);
 
         Account foundAccount = getAccountsAtIndex(index)
                 .stream()
@@ -48,12 +56,23 @@ public class DataRepository {
                 .findFirst()
                 .orElse(null);
 
-        LockFactory.getInstance().readUnlock(userName);
+//        LockFactory.getInstance().readUnlock(userName);
 
         return foundAccount;
     }
 
-    public void createAccount(Customer owner) {
+    public Account getAccount(String firstName, String lastName)
+    {
+        return accounts.values()
+                .stream()
+                .flatMap(x -> x.stream())
+                .filter(a -> a.getOwner().getFirstName().equalsIgnoreCase(firstName))
+                .filter(a -> a.getOwner().getLastName().equalsIgnoreCase(lastName))
+                .findFirst()
+                .orElse(null);
+    }
+
+    public void createAccount(Customer owner, long creditLimit) {
 
         if (getAccount(owner.getUserName()) != null) {
             SessionService.getInstance().log().info(
@@ -64,7 +83,7 @@ public class DataRepository {
 
         setOwnerInfo(owner);    //PATCH: bad pattern.
 
-        Account newAccount = new Account(generateNewAccountNumber(), owner);
+        Account newAccount = new Account(generateNewAccountNumber(), owner, creditLimit);
         owner.setAccountNumber(newAccount.getAccountNumber());
 
         createAccountThreadSafe(owner, newAccount);
@@ -73,22 +92,30 @@ public class DataRepository {
     public List<Loan> getLoans(int accountNumber) {
 
         Customer customer = getCustomer(accountNumber);
+        String userName = customer.getUserName();
 
         String index = getIndex(customer.getUserName().toLowerCase());
 
-        return getLoansAtIndex(index)
+//        LockFactory.getInstance().readlock(userName);
+
+        List<Loan> loans = getLoansAtIndex(index)
                 .stream()
                 .filter(l -> l.getCustomerAccountNumber() == customer.getAccountNumber())
                 .collect(Collectors.toList());
+
+//        LockFactory.getInstance().readUnlock(userName);
+
+        return loans;
     }
 
-    public void createLoan(String userName, long amount, Date dueDate) {
+    public Loan createLoan(String userName, long amount, Date dueDate) {
 
+        String index = getIndex(userName);
         int customerAccountNumber = getAccount(userName).getAccountNumber();
+
         Loan newLoan = new Loan(generateNewLoanNumber(), customerAccountNumber, amount, dueDate);
-
-        createLoanThreadSafe(userName, newLoan);
-
+        getLoansAtIndex(index).add(newLoan);
+        return newLoan;
     }
 
     public void updateLoan(Customer customer, int loanNumber, Date newDueDate) {
@@ -106,17 +133,11 @@ public class DataRepository {
                 .orElse(null);
     }
 
-    private void createLoanThreadSafe(String userName, Loan newLoan) {
-
-        String index = getIndex(userName);
-
-        LockFactory.getInstance().writeLock(userName);
-        getLoansAtIndex(index).add(newLoan);
-        LockFactory.getInstance().writeUnlock(userName);
-    }
-
     private void updateLoanThreadSafe(Customer customer, int loanNumber, Date newDueDate) {
         String index = getIndex(customer.getUserName());
+        String userName = customer.getUserName();
+
+        LockFactory.getInstance().writeLock(userName);
 
         //TODO: check if stream modifies entity inside the collection....
         getLoansAtIndex(index)
@@ -125,6 +146,8 @@ public class DataRepository {
                 .findFirst()
                 .orElse(null)      //TODO: dangerous, if loan doesn't exist, you end up with a null ref.
                 .setDueDate(newDueDate);
+
+        LockFactory.getInstance().writeUnlock(userName);
     }
 
     private void createAccountThreadSafe(Customer owner, Account newAccount) {
@@ -187,38 +210,39 @@ public class DataRepository {
     private void generateInitialData() {
 
         Bank bank = SessionService.getInstance().getBank();
+        long defaultCreditLimit = 1500;
 
         Calendar calendar = Calendar.getInstance();
         calendar.add(calendar.MONTH, 1);
 
         Date dueDate = calendar.getTime();
 
-        Customer alex = new Customer(0, 0, "Alex", "Emond", "at", bank, "alex.emond@gmail.com", "514.111.2222");
-        Customer justin = new Customer(0, 0, "Justin", "Paquette", "jp", bank, "justin.paquette@gmail.com", "514.111.2222");
-        Customer maria = new Customer(0, 0, "Maria", "Etinger", "me", bank, "maria.etinger@gmail.com", "514.111.2222");
+        Customer alex = new Customer(0, 0, "Alex", "Emond", "aa", bank, "alex.emond@gmail.com", "514.111.2222");
+        Customer justin = new Customer(0, 0, "Justin", "Paquette", "aa", bank, "justin.paquette@gmail.com", "514.111.2222");
+        Customer maria = new Customer(0, 0, "Maria", "Etinger", "aa", bank, "maria.etinger@gmail.com", "514.111.2222");
 
         //Those 3 have an account on each bank
-        createAccount(alex);
-        createAccount(justin);
-        createAccount(maria);
+        createAccount(alex, defaultCreditLimit);
+        createAccount(justin, defaultCreditLimit);
+        createAccount(maria, defaultCreditLimit);
 
         if (bank == Bank.Royal) {
-            Customer sylvain = new Customer(0, 0, "Sylvain", "Poudrier", "sp", bank, "sylvain.poudrier@gmail.com", "514.111.2222");
-            createAccount(sylvain);
+            Customer sylvain = new Customer(0, 0, "Sylvain", "Poudrier", "aa", bank, "sylvain.poudrier@gmail.com", "514.111.2222");
+            createAccount(sylvain, defaultCreditLimit);
 
             createLoan(alex.getUserName(), 200, dueDate);
         }
 
         if (bank == Bank.National) {
-            Customer pascal = new Customer(0, 0, "Pascal", "Groulx", "pg", bank, "pascal.groulx@gmail.com", "514.111.2222");
-            createAccount(pascal);
+            Customer pascal = new Customer(0, 0, "Pascal", "Groulx", "aa", bank, "pascal.groulx@gmail.com", "514.111.2222");
+            createAccount(pascal, defaultCreditLimit);
 
             createLoan(alex.getUserName(), 300, dueDate);
         }
 
         if (bank == Bank.Dominion) {
-            Customer max = new Customer(0, 0, "Max", "Tanquerel", "mt", bank, "max.tanquerel@gmail.com", "514.111.2222");
-            createAccount(max);
+            Customer max = new Customer(0, 0, "Max", "Tanquerel", "aa", bank, "max.tanquerel@gmail.com", "514.111.2222");
+            createAccount(max, defaultCreditLimit);
 
             createLoan(justin.getUserName(), 1000, dueDate);
             createLoan(maria.getUserName(), 500, dueDate);

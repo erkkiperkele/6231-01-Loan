@@ -18,6 +18,6 @@ public interface ICustomerServer extends Remote {
     Customer signIn(Bank bank, String email, String password)
             throws RemoteException, FailedLoginException;
     Loan getLoan(Bank bankId, int accountNumber, String password, long loanAmount)
-            throws RemoteException;
+            throws RemoteException, FailedLoginException;
 
 }

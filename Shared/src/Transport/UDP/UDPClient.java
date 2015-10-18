@@ -7,14 +7,14 @@ public class UDPClient implements Closeable {
 
     private DatagramSocket _socket;
     private InetAddress _host;
-    private static final int TIME_OUT = 3000;
+    private static final int TIME_OUT = 20000;
 
 
     public UDPClient() {
 
         try {
-            _socket = new DatagramSocket();
             _host = InetAddress.getByName("localhost");
+            _socket = new DatagramSocket();
             _socket.setSoTimeout(TIME_OUT);
 
         } catch (SocketException e) {
@@ -24,18 +24,24 @@ public class UDPClient implements Closeable {
         }
     }
 
-    public String sendMessage(String message, int serverPort) throws IOException {
+    public byte[] sendMessage(byte[] message, int serverPort) throws IOException {
 
-        byte[] m = message.getBytes();
 
-        DatagramPacket request = new DatagramPacket(m, message.length(), _host, serverPort);
+        DatagramPacket request = new DatagramPacket(message, message.length, _host, serverPort);
         _socket.send(request);
+
+//        _socket.getPort()
+        System.err.println(String.format("UDP CLIENT is waiting answer on port: %d", _socket.getLocalPort()));
+
 
         byte[] buffer = new byte[1000];
         DatagramPacket reply = new DatagramPacket(buffer, buffer.length);
-        _socket.receive(reply);
 
-        return new String(reply.getData());
+        _socket.receive(reply);
+        System.err.println(String.format("UDP CLIENT RECEIVED ANSWER!"));
+
+
+        return reply.getData();
     }
 
     @Override

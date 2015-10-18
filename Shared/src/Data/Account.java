@@ -4,10 +4,12 @@ public class Account {
 
     private int accountNumber;
     private Customer owner;
+    private long creditLimit;
 
-    public Account(int accountNumber, Customer owner) {
+    public Account(int accountNumber, Customer owner, long creditLimit) {
         this.accountNumber = accountNumber;
         this.owner = owner;
+        this.creditLimit = creditLimit;
     }
 
     public Customer getOwner() {
@@ -18,5 +20,7 @@ public class Account {
         return accountNumber;
     }
 
-
+    public long getCreditLimit() {
+        return creditLimit;
+    }
 }

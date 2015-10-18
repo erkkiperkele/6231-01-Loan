@@ -40,4 +40,25 @@ public enum ServerPorts {
                 return 0;
         }
     }
+
+
+
+    public static int getUDPPort(Bank bank)
+    {
+        switch(bank)
+        {
+            case Royal:
+                return 4245;
+
+            case National:
+                return 4246;
+
+            case Dominion:
+                return 4247;
+
+            default:
+                return 0;
+        }
+    }
+
 }

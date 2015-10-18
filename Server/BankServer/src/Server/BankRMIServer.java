@@ -1,13 +1,11 @@
 package Server;
 
 import Contracts.*;
-import Data.Bank;
-import Data.Customer;
-import Data.CustomerInfo;
-import Data.Loan;
-import Data.ServerPorts;
+import Data.*;
 import Services.BankService;
 import Services.SessionService;
+import Transport.UDP.UDPServer;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import javax.security.auth.login.FailedLoginException;
 import java.rmi.Remote;
@@ -20,9 +18,13 @@ import java.util.List;
 
 public class BankRMIServer implements ICustomerServer, IManagerServer {
 
+    private static long CREDIT_LIMIT = 1500;
+
     private static int _serverPort;
     private static ICustomerService _customerService;
     private static IManagerService _managerService;
+
+    private static UDPServer udp;
 
     public static void main(String[] args) {
 
@@ -31,21 +33,46 @@ public class BankRMIServer implements ICustomerServer, IManagerServer {
         Bank serverName = Bank.fromInt(Integer.parseInt(args[0]));
         int serverPort = ServerPorts.fromBankName(serverName);
         SessionService.getInstance().setBank(serverName);
+        _customerService = new BankService();
+        udp = new UDPServer(_customerService);
 
         try {
-            (new BankRMIServer(serverPort)).exportServer();
+            startRMIServer(serverPort);
 
-            _customerService = new BankService();
 
             SessionService.getInstance().log().info(String.format("%s Server is up and running on port %d!", serverName, serverPort));
 
 //            testInitial();
-            testOpeningMultipleAccounts();
+//            testOpeningMultipleAccounts();
 
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+
+        startUDPServer();
+        try {
+            if(serverName == Bank.Royal){
+                testUDPGetLoan();
+            }
+        } catch (FailedLoginException e) {
+            e.printStackTrace();
+        }
+
     }
+
+    private static void startRMIServer(int serverPort) throws Exception {
+        (new BankRMIServer(serverPort)).exportServer();
+    }
+
+    private static void startUDPServer() {
+        Thread startUdpServer = new Thread(() ->
+        {
+            udp.startServer();
+        });
+        startUdpServer.start();
+    }
+
 
     public BankRMIServer(int serverPort) {
         _serverPort = serverPort;
@@ -87,15 +114,15 @@ public class BankRMIServer implements ICustomerServer, IManagerServer {
 
     @Override
     public Loan getLoan(Bank bank, int accountNumber, String password, long loanAmount)
-            throws RemoteException {
+            throws RemoteException, FailedLoginException {
 
-        //TODO: Real implementation!
-        return new Loan(0, 0, 0, new Date());
+           return _customerService.getLoan(bank, accountNumber, password, loanAmount);
     }
 
     @Override
     public void delayPayment(Bank bank, int loanID, Date currentDueDate, Date newDueDate) {
         //TODO: Real implementation!
+        throw new NotImplementedException();
     }
 
     @Override
@@ -121,7 +148,7 @@ public class BankRMIServer implements ICustomerServer, IManagerServer {
         Customer alex = _customerService.getCustomer(alexUserName);
         printCustomer(alex, alexUserName);
 
-        List<Loan> alexLoans = _customerService.getLoan(alex.getAccountNumber());
+        List<Loan> alexLoans = _customerService.getLoans(alex.getAccountNumber());
         printLoans(alexLoans, alex.getFirstName());
     }
 
@@ -191,6 +218,12 @@ public class BankRMIServer implements ICustomerServer, IManagerServer {
             System.out.println(String.format("thread #%d OPENED an account for %s1", Thread.currentThread().getId(), firstName));
         });
 
+//        Thread getAccount = new Thread(() ->
+//        {
+//            _customerService.getCustomer(email + "1");
+//            System.out.println(String.format("thread #%d OPENED an account for %s1", Thread.currentThread().getId(), firstName));
+//        });
+
         openAccountTask1.start();
         openAccountTask2.start();
         openAccountTask3.start();
@@ -202,6 +235,24 @@ public class BankRMIServer implements ICustomerServer, IManagerServer {
         openAccountCreatedByTask1.start();
 
         System.out.println(String.format("End of concurrent account creation"));
+    }
+
+    private static void testUDPGetLoan() throws FailedLoginException {
+
+        Bank bank = Bank.Royal;
+        int accountNumber = 2;
+        String password = "aa";
+        long loanAmount = 200;
+
+
+        //Wait for all servers to start before sending a message.
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        _customerService.getLoan(bank, accountNumber, password, loanAmount);
     }
 
     private static void printCustomer(Customer customer, String username) {
